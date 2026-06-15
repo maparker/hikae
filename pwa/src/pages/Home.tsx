@@ -71,7 +71,7 @@ function DesktopHome() {
   const resetSelection = () => setSelectedBookmarkId(null)
 
   return (
-    <div className="flex h-screen overflow-hidden bg-canvas font-sans dark:bg-dk-bg">
+    <div className="flex h-screen overflow-hidden bg-canvas font-sans">
       <Sidebar
         selectedStatus={selectedStatus}
         setSelectedStatus={(s) => { setSelectedStatus(s); resetSelection() }}

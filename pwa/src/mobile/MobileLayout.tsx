@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Inbox, Folder, Search, Settings, Plus } from 'lucide-react'
+import { useTheme } from '../context/ThemeContext'
 import { MobileInboxScreen } from './MobileInboxScreen'
 import { MobileFoldersScreen } from './MobileFoldersScreen'
 import { MobileSearchScreen } from './MobileSearchScreen'
@@ -20,9 +21,10 @@ export function MobileLayout() {
   const [activeTab, setActiveTab] = useState<Tab>('inbox')
   const [selectedBookmarkId, setSelectedBookmarkId] = useState<string | null>(null)
   const [captureOpen, setCaptureOpen] = useState(false)
+  const { isDark } = useTheme()
 
   return (
-    <div className="relative h-[100dvh] overflow-hidden bg-canvas-mobile dark:bg-dk-bg">
+    <div className={`relative h-[100dvh] overflow-hidden bg-canvas-mobile dark:bg-dk-bg${isDark ? ' dark' : ''}`}>
       {/* Tab screens */}
       <div className="h-full">
         {activeTab === 'inbox' && (
