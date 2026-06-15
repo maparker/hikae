@@ -30,11 +30,14 @@ struct MenuBarView: View {
                 }
                 .buttonStyle(.plain)
             }
-            Button {
-                NSApp.sendAction(Selector(("showSettingsWindow:")), to: nil, from: nil)
-                NSApp.activate(ignoringOtherApps: true)
-            } label: {
+            SettingsLink {
                 Image(systemName: "gear")
+            }
+            .buttonStyle(.plain)
+            Button {
+                NSApp.terminate(nil)
+            } label: {
+                Image(systemName: "power")
             }
             .buttonStyle(.plain)
         }
@@ -44,7 +47,17 @@ struct MenuBarView: View {
 
     @ViewBuilder
     private var content: some View {
-        if sync.inboxItems.isEmpty {
+        if sync.inboxItems.isEmpty && !sync.isSyncing && sync.error == nil && sync.lastSynced == nil {
+            VStack(spacing: 8) {
+                Image(systemName: "tray")
+                    .font(.largeTitle)
+                    .foregroundStyle(.secondary)
+                Text("Syncing…")
+                    .foregroundStyle(.secondary)
+            }
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 32)
+        } else if sync.inboxItems.isEmpty {
             VStack(spacing: 8) {
                 Image(systemName: "tray")
                     .font(.largeTitle)
@@ -69,23 +82,31 @@ struct MenuBarView: View {
 
     @ViewBuilder
     private var footer: some View {
-        if sync.error != nil || sync.lastSynced != nil {
-            Divider()
-            VStack(spacing: 2) {
-                if let error = sync.error {
-                    Text(error)
-                        .font(.caption)
-                        .foregroundStyle(.red)
-                        .multilineTextAlignment(.center)
-                        .padding(.horizontal, 12)
-                }
+        Divider()
+        VStack(spacing: 2) {
+            if let error = sync.error {
+                Text(error)
+                    .font(.caption)
+                    .foregroundStyle(.red)
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, 12)
+            }
+            HStack {
                 if let lastSynced = sync.lastSynced {
-                    Text("Updated \(lastSynced, style: .relative) ago")
+                    Text("Synced \(lastSynced, style: .relative) ago · \(sync.inboxCount) in inbox")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                } else if sync.isSyncing {
+                    Text("Syncing…")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                } else {
+                    Text(sync.error != nil ? "Sync failed" : "Not yet synced")
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
             }
-            .padding(.vertical, 6)
         }
+        .padding(.vertical, 6)
     }
 }
