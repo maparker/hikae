@@ -31,8 +31,13 @@ class SyncService: ObservableObject {
         defer { isSyncing = false }
 
         do {
-            let pendingFiles = try await gh.listDirectory("data/pending")
-            let jsonFiles = pendingFiles.filter { $0.name.hasSuffix(".json") && $0.name != ".json" }
+            let jsonFiles: [GitHubFile]
+            do {
+                let pendingFiles = try await gh.listDirectory("data/pending")
+                jsonFiles = pendingFiles.filter { $0.name.hasSuffix(".json") && $0.name != ".json" }
+            } catch {
+                jsonFiles = []
+            }
             if !jsonFiles.isEmpty {
                 try await mergePending(jsonFiles)
             }

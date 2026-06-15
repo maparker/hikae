@@ -10,6 +10,7 @@ async function apiRequest<T>(
 ): Promise<T> {
   const res = await fetch(url, {
     ...options,
+    cache: 'no-store',
     headers: {
       Authorization: `Bearer ${token}`,
       Accept: 'application/vnd.github+json',
