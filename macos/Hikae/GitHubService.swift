@@ -73,6 +73,7 @@ class GitHubService {
     private func request(method: String, path: String, body: Data? = nil) async throws -> Data {
         let urlString = "https://api.github.com/repos/\(repo)/contents/\(path)"
         var req = URLRequest(url: URL(string: urlString)!)
+        req.cachePolicy = .reloadIgnoringLocalCacheData
         req.httpMethod = method
         req.setValue("token \(token)", forHTTPHeaderField: "Authorization")
         req.setValue("application/vnd.github.v3+json", forHTTPHeaderField: "Accept")
