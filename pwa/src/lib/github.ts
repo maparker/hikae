@@ -92,7 +92,7 @@ export async function mergePendingFiles(
       `${API}/repos/${user}/hikae-data/contents/${PENDING_PATH}`,
       token
     )
-    files = all.filter(f => f.type === 'file' && f.name.endsWith('.json'))
+    files = all.filter(f => f.type === 'file' && f.name !== '.gitkeep')
   } catch {
     return { data, sha }
   }

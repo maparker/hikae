@@ -34,9 +34,8 @@ class SyncService: ObservableObject {
             let jsonFiles: [GitHubFile]
             do {
                 let pendingFiles = try await gh.listDirectory("data/pending")
-                print("[Hikae] all pending entries: \(pendingFiles.map { "\($0.name) [\($0.path)]" })")
-                jsonFiles = pendingFiles.filter { $0.name.hasSuffix(".json") && $0.name != ".json" }
-                print("[Hikae] pending .json files: \(jsonFiles.map(\.name))")
+                jsonFiles = pendingFiles.filter { $0.name != ".gitkeep" }
+                print("[Hikae] pending files found: \(jsonFiles.map(\.name))")
             } catch {
                 print("[Hikae] data/pending listing failed (ok if dir absent): \(error)")
                 jsonFiles = []
@@ -213,7 +212,9 @@ class SyncService: ObservableObject {
     }
 
     private func parseFilenameDate(_ filename: String) -> String? {
-        let stem = filename.replacingOccurrences(of: ".json", with: "")
+        let stem = filename
+            .replacingOccurrences(of: ".json", with: "")
+            .replacingOccurrences(of: "-", with: "")
         let formatter = DateFormatter()
         formatter.dateFormat = "yyyyMMddHHmmss"
         formatter.timeZone = TimeZone(identifier: "UTC")
