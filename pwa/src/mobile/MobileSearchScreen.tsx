@@ -62,7 +62,7 @@ export function MobileSearchScreen({ onSelectBookmark }: MobileSearchScreenProps
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search bookmarks…"
             autoFocus
-            className="flex-1 bg-transparent font-mono text-[14px] text-ink outline-none placeholder:text-ink-3 dark:text-dk-ink dark:placeholder:text-dk-ink-3"
+            className="flex-1 bg-transparent font-mono text-base text-ink outline-none placeholder:text-ink-3 dark:text-dk-ink dark:placeholder:text-dk-ink-3"
           />
           {query && (
             <button onClick={() => setQuery('')} className="text-ink-3 dark:text-dk-ink-3">

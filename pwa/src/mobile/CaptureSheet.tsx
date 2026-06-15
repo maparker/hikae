@@ -157,7 +157,7 @@ export function CaptureSheet({ onClose }: CaptureSheetProps) {
               value={url}
               onChange={(e) => setUrl(e.target.value)}
               placeholder="https://"
-              className="w-full bg-transparent font-mono text-[14px] text-ink outline-none placeholder:text-ink-3"
+              className="w-full bg-transparent font-mono text-base text-ink outline-none placeholder:text-ink-3"
             />
           </div>
 
@@ -192,7 +192,7 @@ export function CaptureSheet({ onClose }: CaptureSheetProps) {
                   onChange={(e) => setWhy(e.target.value)}
                   placeholder="What made you save this?"
                   rows={3}
-                  className="w-full resize-none bg-transparent text-[14px] leading-relaxed text-ink outline-none placeholder:text-ink-3"
+                  className="w-full resize-none bg-transparent text-base leading-relaxed text-ink outline-none placeholder:text-ink-3"
                 />
               </div>
             </div>
