@@ -1,13 +1,25 @@
-import { useState, useMemo } from 'react'
+import { useEffect, useState, useMemo } from 'react'
 import { Inbox } from 'lucide-react'
 import { Sidebar } from '../components/Sidebar'
 import { BookmarkRow } from '../components/BookmarkRow'
 import { DetailPanel } from '../components/DetailPanel'
 import { EditBookmarkModal } from '../components/EditBookmarkModal'
+import { MobileLayout } from '../mobile/MobileLayout'
 import { Spinner } from '../components/ui/spinner'
 import { useData } from '../context/DataContext'
 import { useAuth } from '../context/AuthContext'
 import type { Bookmark, BookmarkStatus } from '../types'
+
+function useIsMobile() {
+  const [isMobile, setIsMobile] = useState(() => window.innerWidth < 768)
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width: 767px)')
+    const handler = (e: MediaQueryListEvent) => setIsMobile(e.matches)
+    mq.addEventListener('change', handler)
+    return () => mq.removeEventListener('change', handler)
+  }, [])
+  return isMobile
+}
 
 function timeAgo(iso: string): string {
   const diff = Date.now() - new Date(iso).getTime()
@@ -19,7 +31,7 @@ function timeAgo(iso: string): string {
   return `${Math.floor(hrs / 24)}d ago`
 }
 
-export function Home() {
+function DesktopHome() {
   const { data, loading, error } = useData()
   const { user } = useAuth()
   const [selectedStatus, setSelectedStatus] = useState<BookmarkStatus | null>('inbox')
@@ -59,7 +71,7 @@ export function Home() {
   const resetSelection = () => setSelectedBookmarkId(null)
 
   return (
-    <div className="flex h-screen overflow-hidden bg-canvas font-sans">
+    <div className="flex h-screen overflow-hidden bg-canvas font-sans dark:bg-dk-bg">
       <Sidebar
         selectedStatus={selectedStatus}
         setSelectedStatus={(s) => { setSelectedStatus(s); resetSelection() }}
@@ -69,56 +81,41 @@ export function Home() {
         setSelectedTagId={(id) => { setSelectedTagId(id); resetSelection() }}
       />
 
-      {/* List section */}
       <div className="flex flex-1 flex-col overflow-hidden">
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-hairline px-6 py-4">
+        <div className="flex items-center justify-between border-b border-hairline px-6 py-4 dark:border-dk-border">
           <div className="flex items-baseline gap-2">
-            <h2 className="text-[17px] font-semibold text-ink">{listTitle}</h2>
-            <span className="font-mono text-[12.5px] text-ink-3">
+            <h2 className="text-[17px] font-semibold text-ink dark:text-dk-ink">{listTitle}</h2>
+            <span className="font-mono text-[12.5px] text-ink-3 dark:text-dk-ink-3">
               {sortedBookmarks.length} {sortedBookmarks.length === 1 ? 'item' : 'items'}
             </span>
           </div>
-          <div className="flex items-center gap-1.5 rounded-full border border-hairline bg-chip-bg px-2.5 py-1">
-            <span className="h-1.5 w-1.5 rounded-full bg-sync-green" />
-            <span className="font-mono text-[11.5px] text-ink-mono">
+          <div className="flex items-center gap-1.5 rounded-full border border-hairline bg-chip-bg px-2.5 py-1 dark:border-dk-border dark:bg-dk-chip-bg">
+            <span className="h-1.5 w-1.5 rounded-full bg-sync-green dark:bg-dk-green" />
+            <span className="font-mono text-[11.5px] text-ink-mono dark:text-dk-ink-3">
               synced · {user}/hikae-data
               {data?.meta.last_modified ? ` · ${timeAgo(data.meta.last_modified)}` : ''}
             </span>
           </div>
         </div>
 
-        {/* Capture bar — presentational */}
-        <div className="flex items-center gap-3 border-b border-hairline-faint bg-row-hover px-6 py-[11px]">
-          <svg
-            className="h-4 w-4 flex-shrink-0 text-icon-default"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth={2}
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <path d="M9 17H7A5 5 0 0 1 7 7h2" />
-            <path d="M15 7h2a5 5 0 1 1 0 10h-2" />
-            <line x1="8" y1="12" x2="16" y2="12" />
+        {/* Capture bar */}
+        <div className="flex items-center gap-3 border-b border-hairline-faint bg-row-hover px-6 py-[11px] dark:border-dk-divider dark:bg-dk-bg">
+          <svg className="h-4 w-4 flex-shrink-0 text-icon-default dark:text-dk-ink-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+            <path d="M9 17H7A5 5 0 0 1 7 7h2" /><path d="M15 7h2a5 5 0 1 1 0 10h-2" /><line x1="8" y1="12" x2="16" y2="12" />
           </svg>
-          <span className="flex-1 font-mono text-[13px] text-ink-3">
+          <span className="flex-1 font-mono text-[13px] text-ink-3 dark:text-dk-ink-3">
             Paste a URL to keep for later…
           </span>
-          <span className="font-mono text-[11px] text-ink-3">source auto-detected from domain</span>
-          <kbd className="rounded border border-hairline bg-surface px-1.5 py-0.5 font-mono text-[10.5px] text-ink-mono shadow-[0_2px_0_#E6DECE]">
+          <span className="font-mono text-[11px] text-ink-3 dark:text-dk-ink-3">source auto-detected from domain</span>
+          <kbd className="rounded border border-hairline bg-surface px-1.5 py-0.5 font-mono text-[10.5px] text-ink-mono shadow-[0_2px_0_#E6DECE] dark:border-dk-border dark:bg-dk-card dark:text-dk-ink-3">
             ⌘V
           </kbd>
         </div>
 
-        {/* Bookmark list */}
+        {/* List */}
         <div className="flex-1 overflow-y-auto">
-          {loading && (
-            <div className="flex justify-center py-16">
-              <Spinner size="lg" />
-            </div>
-          )}
+          {loading && <div className="flex justify-center py-16"><Spinner size="lg" /></div>}
           {error && (
             <div className="mx-6 mt-6 rounded-lg border border-red-200 bg-red-50 p-4">
               <p className="text-sm text-red-700">{error}</p>
@@ -130,23 +127,24 @@ export function Home() {
               <p className="text-sm">Nothing here yet</p>
             </div>
           )}
-          {!loading &&
-            !error &&
-            sortedBookmarks.map((b) => (
-              <BookmarkRow
-                key={b.id}
-                bookmark={b}
-                isSelected={b.id === effectiveSelectedId}
-                onSelect={() => setSelectedBookmarkId(b.id)}
-              />
-            ))}
+          {!loading && !error && sortedBookmarks.map((b) => (
+            <BookmarkRow
+              key={b.id}
+              bookmark={b}
+              isSelected={b.id === effectiveSelectedId}
+              onSelect={() => setSelectedBookmarkId(b.id)}
+            />
+          ))}
         </div>
       </div>
 
-      {/* Detail panel */}
       <DetailPanel bookmark={selectedBookmark} onEdit={setEditingBookmark} />
-
       <EditBookmarkModal bookmark={editingBookmark} onClose={() => setEditingBookmark(null)} />
     </div>
   )
+}
+
+export function Home() {
+  const isMobile = useIsMobile()
+  return isMobile ? <MobileLayout /> : <DesktopHome />
 }
