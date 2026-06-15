@@ -16,10 +16,20 @@ interface MobileInboxScreenProps {
   onSelectBookmark: (id: string) => void
 }
 
+function timeAgo(iso: string): string {
+  const diff = Date.now() - new Date(iso).getTime()
+  const mins = Math.floor(diff / 60000)
+  if (mins < 1) return 'just now'
+  if (mins < 60) return `${mins}m ago`
+  const hrs = Math.floor(mins / 60)
+  if (hrs < 24) return `${hrs}h ago`
+  return `${Math.floor(hrs / 24)}d ago`
+}
+
 const PULL_THRESHOLD = 64
 
 export function MobileInboxScreen({ onSelectBookmark }: MobileInboxScreenProps) {
-  const { data, loading, error, refresh } = useData()
+  const { data, loading, error, refresh, lastFetched } = useData()
   const [filter, setFilter] = useState<BookmarkStatus>('inbox')
   const [pullY, setPullY] = useState(0)
   const [refreshing, setRefreshing] = useState(false)
@@ -77,10 +87,15 @@ export function MobileInboxScreen({ onSelectBookmark }: MobileInboxScreenProps) 
           <span className="font-serif text-[17px] font-semibold text-ink dark:text-dk-ink">
             Hikae
           </span>
-          <div className="ml-auto flex items-center gap-1.5 rounded-full border border-hairline bg-surface px-2.5 py-1 dark:border-dk-border dark:bg-dk-card">
-            <span className="h-1.5 w-1.5 rounded-full bg-sync-green dark:bg-dk-green" />
-            <span className="font-mono text-[10.5px] text-ink-mono dark:text-dk-ink-3">synced</span>
-          </div>
+          <button
+            onClick={() => { if (!refreshing) { setRefreshing(true); refresh().finally(() => setRefreshing(false)) } }}
+            className="ml-auto flex items-center gap-1.5 rounded-full border border-hairline bg-surface px-2.5 py-1 dark:border-dk-border dark:bg-dk-card active:opacity-60"
+          >
+            <span className={`h-1.5 w-1.5 rounded-full ${refreshing ? 'bg-ink-3 dark:bg-dk-ink-3' : 'bg-sync-green dark:bg-dk-green'}`} />
+            <span className="font-mono text-[10.5px] text-ink-mono dark:text-dk-ink-3">
+              {refreshing ? 'syncing…' : lastFetched ? `synced · ${timeAgo(lastFetched.toISOString())}` : 'synced'}
+            </span>
+          </button>
         </div>
 
         {/* Title */}

@@ -33,7 +33,7 @@ function timeAgo(iso: string): string {
 }
 
 function DesktopHome() {
-  const { data, loading, error } = useData()
+  const { data, loading, error, refresh, lastFetched } = useData()
   const { user } = useAuth()
   const [selectedStatus, setSelectedStatus] = useState<BookmarkStatus | null>('inbox')
   const [selectedFolderId, setSelectedFolderId] = useState<string | null>(null)
@@ -181,13 +181,16 @@ function DesktopHome() {
                   <Search className="h-3.5 w-3.5" />
                   <kbd className="font-mono text-[10px]">⌘K</kbd>
                 </button>
-                <div className="flex items-center gap-1.5 rounded-full border border-hairline bg-chip-bg px-2.5 py-1">
-                  <span className="h-1.5 w-1.5 rounded-full bg-sync-green" />
+                <button
+                  onClick={() => refresh()}
+                  className="flex items-center gap-1.5 rounded-full border border-hairline bg-chip-bg px-2.5 py-1 transition-opacity hover:opacity-70"
+                  title="Click to sync"
+                >
+                  <span className={`h-1.5 w-1.5 rounded-full ${loading ? 'bg-ink-3' : 'bg-sync-green'}`} />
                   <span className="font-mono text-[11.5px] text-ink-mono">
-                    synced · {user}/hikae-data
-                    {data?.meta.last_modified ? ` · ${timeAgo(data.meta.last_modified)}` : ''}
+                    {loading ? 'syncing…' : `synced · ${user}/hikae-data${lastFetched ? ` · ${timeAgo(lastFetched.toISOString())}` : ''}`}
                   </span>
-                </div>
+                </button>
               </div>
             </>
           )}
