@@ -30,6 +30,20 @@ struct InboxRowView: View {
                 }
                 .buttonStyle(.bordered)
                 .controlSize(.small)
+
+                Button("Archive") {
+                    Task { await sync.archive(bookmark) }
+                }
+                .buttonStyle(.bordered)
+                .controlSize(.small)
+
+                Button(role: .destructive) {
+                    Task { await sync.delete(bookmark) }
+                } label: {
+                    Image(systemName: "trash")
+                }
+                .buttonStyle(.bordered)
+                .controlSize(.small)
             }
         }
         .padding(.horizontal, 12)

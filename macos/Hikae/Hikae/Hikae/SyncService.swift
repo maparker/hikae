@@ -166,6 +166,18 @@ class SyncService: ObservableObject {
     }
 
     func file(_ bookmark: Bookmark) async {
+        await updateStatus(bookmark, status: "filed", timestampKey: "filed_at")
+    }
+
+    func archive(_ bookmark: Bookmark) async {
+        await updateStatus(bookmark, status: "archived", timestampKey: "archived_at")
+    }
+
+    func delete(_ bookmark: Bookmark) async {
+        await updateStatus(bookmark, status: "deleted", timestampKey: "deleted_at")
+    }
+
+    private func updateStatus(_ bookmark: Bookmark, status: String, timestampKey: String) async {
         do {
             let fileContent = try await gh.getFile("data/bookmarks.json")
             guard
@@ -176,8 +188,8 @@ class SyncService: ObservableObject {
 
             let now = iso.string(from: Date())
             if let idx = bookmarks.firstIndex(where: { ($0["id"] as? String) == bookmark.id }) {
-                bookmarks[idx]["status"] = "filed"
-                bookmarks[idx]["filed_at"] = now
+                bookmarks[idx]["status"] = status
+                bookmarks[idx][timestampKey] = now
                 bookmarks[idx]["last_modified_at"] = now
                 bookmarks[idx]["last_modified_by"] = "mac"
             }
@@ -198,7 +210,7 @@ class SyncService: ObservableObject {
                 "data/bookmarks.json",
                 content: updatedContent,
                 sha: fileContent.sha,
-                message: "mac: file bookmark \(bookmark.id)"
+                message: "mac: \(status) bookmark \(bookmark.id)"
             )
 
             inboxItems.removeAll { $0.id == bookmark.id }
