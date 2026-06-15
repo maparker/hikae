@@ -8,15 +8,25 @@ export default {
       return json({ error: 'Method not allowed' }, 405);
     }
 
-    let code;
+    let code, client_id;
     try {
-      ({ code } = await request.json());
+      ({ code, client_id } = await request.json());
     } catch {
       return json({ error: 'Invalid request body' }, 400);
     }
 
-    if (!code) {
-      return json({ error: 'Missing code' }, 400);
+    if (!code || !client_id) {
+      return json({ error: 'Missing code or client_id' }, 400);
+    }
+
+    const secrets = {
+      [env.GITHUB_DEV_CLIENT_ID]: env.GITHUB_DEV_CLIENT_SECRET,
+      [env.GITHUB_PROD_CLIENT_ID]: env.GITHUB_PROD_CLIENT_SECRET,
+    };
+
+    const client_secret = secrets[client_id];
+    if (!client_secret) {
+      return json({ error: 'Unknown client_id' }, 400);
     }
 
     const response = await fetch('https://github.com/login/oauth/access_token', {
@@ -25,11 +35,7 @@ export default {
         'Content-Type': 'application/json',
         'Accept': 'application/json',
       },
-      body: JSON.stringify({
-        client_id: env.GITHUB_CLIENT_ID,
-        client_secret: env.GITHUB_CLIENT_SECRET,
-        code,
-      }),
+      body: JSON.stringify({ client_id, client_secret, code }),
     });
 
     const data = await response.json();

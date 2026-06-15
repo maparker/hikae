@@ -1,11 +1,11 @@
 import { Github } from 'lucide-react'
 import { Button } from '../components/ui/button'
 
-const CLIENT_ID = 'Ov23liM3FF1oiX4yeC2Z'
+const CLIENT_ID = import.meta.env.VITE_GITHUB_CLIENT_ID as string
 
 export function Login() {
   const handleSignIn = () => {
-    const redirectUri = `${window.location.origin}/callback`
+    const redirectUri = `${window.location.origin}/hikae/callback`
     window.location.href =
       `https://github.com/login/oauth/authorize?client_id=${CLIENT_ID}&scope=repo&redirect_uri=${encodeURIComponent(redirectUri)}`
   }

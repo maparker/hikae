@@ -28,7 +28,7 @@ export function Callback() {
         const tokenRes = await fetch(WORKER_URL, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ code }),
+          body: JSON.stringify({ code, client_id: import.meta.env.VITE_GITHUB_CLIENT_ID }),
         })
         if (!tokenRes.ok) throw new Error(`Worker returned ${tokenRes.status}`)
         const { access_token } = (await tokenRes.json()) as { access_token: string }
