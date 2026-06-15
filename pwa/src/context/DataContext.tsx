@@ -6,7 +6,7 @@ import {
   useCallback,
   type ReactNode,
 } from 'react'
-import { getBookmarksData, saveBookmarksData } from '../lib/github'
+import { getBookmarksData, saveBookmarksData, mergePendingFiles } from '../lib/github'
 import { useAuth } from './AuthContext'
 import type { BookmarksData } from '../types'
 
@@ -34,8 +34,9 @@ export function DataProvider({ children }: { children: ReactNode }) {
     setError(null)
     try {
       const result = await getBookmarksData(user, token)
-      setData(result.data)
-      setSha(result.sha)
+      const merged = await mergePendingFiles(user, token, result.data, result.sha)
+      setData(merged.data)
+      setSha(merged.sha)
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Failed to load data')
     } finally {

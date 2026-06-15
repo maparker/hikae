@@ -58,9 +58,11 @@ class SyncService: ObservableObject {
 
         let decoder = JSONDecoder()
         return rawBookmarks.compactMap { dict -> Bookmark? in
+            let deletedAt = dict["deleted_at"]
+            let notDeleted = deletedAt == nil || deletedAt is NSNull || (deletedAt as? String) == ""
             guard
                 let status = dict["status"] as? String, status == "inbox",
-                (dict["deleted_at"] is NSNull) || dict["deleted_at"] == nil
+                notDeleted
             else { return nil }
             guard let itemData = try? JSONSerialization.data(withJSONObject: dict),
                   let bookmark = try? decoder.decode(Bookmark.self, from: itemData)

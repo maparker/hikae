@@ -33,6 +33,19 @@ struct PendingCapture {
     let capturedBy: String
 
     static func parse(_ text: String) -> PendingCapture? {
+        if let data = text.data(using: .utf8),
+           let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+           let url = json["url"] as? String, !url.isEmpty {
+            let note = (json["note"] as? String).flatMap { $0.isEmpty ? nil : $0 }
+            let why  = (json["why"]  as? String).flatMap { $0.isEmpty ? nil : $0 }
+            return PendingCapture(
+                url: url,
+                title: (json["title"] as? String) ?? url,
+                note: note,
+                why: why,
+                capturedBy: (json["captured_by"] as? String) ?? "ios"
+            )
+        }
         var dict: [String: String] = [:]
         for line in text.components(separatedBy: .newlines) {
             let trimmed = line.trimmingCharacters(in: .whitespaces)
