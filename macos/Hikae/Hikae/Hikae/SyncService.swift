@@ -34,8 +34,9 @@ class SyncService: ObservableObject {
             let jsonFiles: [GitHubFile]
             do {
                 let pendingFiles = try await gh.listDirectory("data/pending")
+                print("[Hikae] all pending entries: \(pendingFiles.map { "\($0.name) [\($0.path)]" })")
                 jsonFiles = pendingFiles.filter { $0.name.hasSuffix(".json") && $0.name != ".json" }
-                print("[Hikae] pending files found: \(jsonFiles.map(\.name))")
+                print("[Hikae] pending .json files: \(jsonFiles.map(\.name))")
             } catch {
                 print("[Hikae] data/pending listing failed (ok if dir absent): \(error)")
                 jsonFiles = []

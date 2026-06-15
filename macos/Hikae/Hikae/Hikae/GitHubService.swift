@@ -26,16 +26,18 @@ class GitHubService {
 
     func listDirectory(_ path: String) async throws -> [GitHubFile] {
         let data = try await request(method: "GET", path: path)
-        guard let array = try JSONSerialization.jsonObject(with: data) as? [[String: Any]] else {
+        let parsed = try JSONSerialization.jsonObject(with: data)
+        guard let array = parsed as? [[String: Any]] else {
+            print("[Hikae] listDirectory \(path): response is not an array — \(String(data: data, encoding: .utf8)?.prefix(200) ?? "?")")
             throw GitHubError.invalidResponse
         }
         return array.compactMap { item -> GitHubFile? in
-            guard
-                let type_ = item["type"] as? String, type_ == "file",
-                let name = item["name"] as? String,
-                let filePath = item["path"] as? String,
-                let sha = item["sha"] as? String
-            else { return nil }
+            let type_ = item["type"] as? String
+            let name = item["name"] as? String
+            let filePath = item["path"] as? String
+            let sha = item["sha"] as? String
+            print("[Hikae] entry: name=\(name ?? "?") type=\(type_ ?? "?") path=\(filePath ?? "?")")
+            guard type_ == "file", let name, let filePath, let sha else { return nil }
             return GitHubFile(name: name, path: filePath, sha: sha)
         }
     }
