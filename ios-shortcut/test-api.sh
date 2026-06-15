@@ -21,7 +21,7 @@ NOTE="${3:-}"
 WHY="${4:-}"
 
 CAPTURED_AT=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
-BOOKMARK_ID="ios-$(date -u +%Y%m%d%H%M%S%3N)"
+BOOKMARK_ID="ios-$(python3 -c 'import time; print(int(time.time() * 1000))')"
 
 echo "==> Fetching current bookmarks.json..."
 RESPONSE=$(curl -sf \

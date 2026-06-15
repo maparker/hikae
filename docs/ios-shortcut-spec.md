@@ -137,7 +137,15 @@ This is the most complex step. The goal: look up `url_host` in the existing `sou
 
 **17. Base64 encode the updated JSON**
 - Encode: `updated_json`
+- Store as: `encoded_content_raw`
+
+**17b. Strip newlines from base64 output**
+- Action: "Replace Text"
+- Find: a newline character (tap Return in the search field)
+- Replace with: *(leave blank)*
+- Input: `encoded_content_raw`
 - Store as: `encoded_content`
+- *(Shortcuts wraps base64 every 76 chars; GitHub's API requires no line breaks in the `content` field)*
 
 **18. Build PUT request body dictionary**
 ```
