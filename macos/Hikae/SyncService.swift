@@ -35,16 +35,21 @@ class SyncService: ObservableObject {
             do {
                 let pendingFiles = try await gh.listDirectory("data/pending")
                 jsonFiles = pendingFiles.filter { $0.name.hasSuffix(".json") && $0.name != ".json" }
+                print("[Hikae] pending files found: \(jsonFiles.map(\.name))")
             } catch {
+                print("[Hikae] data/pending listing failed (ok if dir absent): \(error)")
                 jsonFiles = []
             }
             if !jsonFiles.isEmpty {
                 try await mergePending(jsonFiles)
             }
             let fileContent = try await gh.getFile("data/bookmarks.json")
-            inboxItems = try parseInboxBookmarks(from: fileContent.content)
+            let parsed = try parseInboxBookmarks(from: fileContent.content)
+            print("[Hikae] bookmarks.json fetched, inbox count: \(parsed.count)")
+            inboxItems = parsed
             lastSynced = Date()
         } catch {
+            print("[Hikae] sync error: \(error)")
             self.error = error.localizedDescription
         }
     }
@@ -54,21 +59,28 @@ class SyncService: ObservableObject {
             let data = json.data(using: .utf8),
             let root = try JSONSerialization.jsonObject(with: data) as? [String: Any],
             let rawBookmarks = root["bookmarks"] as? [[String: Any]]
-        else { return [] }
+        else {
+            print("[Hikae] failed to parse bookmarks.json root structure")
+            return []
+        }
 
+        print("[Hikae] total bookmarks in file: \(rawBookmarks.count)")
         let decoder = JSONDecoder()
-        return rawBookmarks.compactMap { dict -> Bookmark? in
+        let results = rawBookmarks.compactMap { dict -> Bookmark? in
             let deletedAt = dict["deleted_at"]
             let notDeleted = deletedAt == nil || deletedAt is NSNull || (deletedAt as? String) == ""
-            guard
-                let status = dict["status"] as? String, status == "inbox",
-                notDeleted
-            else { return nil }
+            guard let status = dict["status"] as? String else { return nil }
+            guard status == "inbox" && notDeleted else { return nil }
             guard let itemData = try? JSONSerialization.data(withJSONObject: dict),
                   let bookmark = try? decoder.decode(Bookmark.self, from: itemData)
-            else { return nil }
+            else {
+                print("[Hikae] failed to decode bookmark: \(dict["id"] ?? "?")")
+                return nil
+            }
             return bookmark
         }
+        print("[Hikae] inbox bookmarks decoded: \(results.count)")
+        return results
     }
 
     private func mergePending(_ files: [GitHubFile]) async throws {
