@@ -2,7 +2,6 @@ import SwiftUI
 
 struct MenuBarView: View {
     @EnvironmentObject var sync: SyncService
-    @Environment(\.openSettings) private var openSettings
 
     var body: some View {
         VStack(spacing: 0) {
@@ -32,7 +31,8 @@ struct MenuBarView: View {
                 .buttonStyle(.plain)
             }
             Button {
-                openSettings()
+                NSApp.sendAction(Selector(("showSettingsWindow:")), to: nil, from: nil)
+                NSApp.activate(ignoringOtherApps: true)
             } label: {
                 Image(systemName: "gear")
             }

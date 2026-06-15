@@ -15,6 +15,7 @@ interface DataContextValue {
   sha: string | null
   loading: boolean
   error: string | null
+  lastFetched: Date | null
   save: (updatedData: BookmarksData, message: string) => Promise<void>
   refresh: () => Promise<void>
 }
@@ -27,6 +28,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
   const [sha, setSha] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [lastFetched, setLastFetched] = useState<Date | null>(null)
 
   const load = useCallback(async () => {
     if (!token || !user) return
@@ -37,6 +39,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
       const merged = await mergePendingFiles(user, token, result.data, result.sha)
       setData(merged.data)
       setSha(merged.sha)
+      setLastFetched(new Date())
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Failed to load data')
     } finally {
@@ -75,7 +78,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
   const refresh = useCallback(() => load(), [load])
 
   return (
-    <DataContext.Provider value={{ data, sha, loading, error, save, refresh }}>
+    <DataContext.Provider value={{ data, sha, loading, error, lastFetched, save, refresh }}>
       {children}
     </DataContext.Provider>
   )

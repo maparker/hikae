@@ -1,4 +1,4 @@
-import { ChevronRight } from 'lucide-react'
+import { ChevronRight, RefreshCw } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { useData } from '../context/DataContext'
 import { useTheme, type Theme } from '../context/ThemeContext'
@@ -76,7 +76,7 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
 
 export function MobileSettingsScreen() {
   const { user, avatarUrl, signOut } = useAuth()
-  const { data } = useData()
+  const { data, loading, lastFetched, refresh } = useData()
   const { theme, setTheme } = useTheme()
 
   return (
@@ -119,12 +119,19 @@ export function MobileSettingsScreen() {
             <SectionLabel>Data</SectionLabel>
             <GroupCard>
               <Row label="Repository" value={`${user}/hikae-data`} />
-              <Row label="Last sync" last>
-                <div className="flex items-center gap-1.5">
-                  <span className="h-1.5 w-1.5 rounded-full bg-sync-green dark:bg-dk-green" />
+              <Row label="Data last modified" value={data?.meta.last_modified ? timeAgo(data.meta.last_modified) : '—'} />
+              <Row label="Last fetched" last>
+                <div className="flex items-center gap-2">
                   <span className="font-mono text-[12px] text-ink-mono dark:text-dk-ink-3">
-                    {data?.meta.last_modified ? timeAgo(data.meta.last_modified) : '—'}
+                    {lastFetched ? timeAgo(lastFetched.toISOString()) : '—'}
                   </span>
+                  <button
+                    onClick={() => refresh()}
+                    disabled={loading}
+                    className="rounded-full p-1.5 text-ink-3 active:bg-hairline disabled:opacity-40"
+                  >
+                    <RefreshCw className={`h-3.5 w-3.5 ${loading ? 'animate-spin' : ''}`} />
+                  </button>
                 </div>
               </Row>
             </GroupCard>
