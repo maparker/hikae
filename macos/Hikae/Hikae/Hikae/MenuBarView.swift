@@ -12,6 +12,7 @@ struct MenuBarView: View {
             footer
         }
         .frame(width: 320)
+        .onAppear { Task { await sync.sync() } }
     }
 
     private var header: some View {
