@@ -113,3 +113,35 @@
 **Why:** Round-trip safety — `Codable` on the full root would drop unknown keys (`folders`, `tags`, future fields). Re-fetching SHA for each pending delete adds one extra GET per file but eliminates 409 Conflict errors if something else touches the file between merge and delete.
 
 ---
+
+### 2026-06-15 - Raycast Extension: Full Scaffold Written
+
+**Investigated:** Project memory (project_overview.md, schema.md) and full task spec to align types, status values, and GitHub API patterns with the rest of the system.
+
+**Changed:**
+- Created `/Users/mattparker/Documents/Code/hikae/raycast/` — new directory
+- `package.json` — Raycast extension manifest: two commands (search/capture), two extension-level preferences (github_pat password, github_repo textfield defaulting to maparker/hikae-data)
+- `tsconfig.json` — extends `@raycast/api/tsconfig.json`
+- `src/types.ts` — `Bookmark`, `Source`, `BookmarksData` interfaces matching schema
+- `src/lib/github.ts` — `getPrefs`, `getBookmarksData` (GET + atob), `writePendingCapture` (PUT new pending file), `fileBookmark` (GET with SHA, map status to filed, PUT back); both btoa calls use `unescape(encodeURIComponent(...))` for Unicode safety
+- `src/search.tsx` — `useCachedPromise` for data, `List.Dropdown` status filter, client-side filter (deleted hidden, search on title/url/source name), accessories show source badge + relative date, actions: Open, Copy URL, File, Open in Hikae
+- `src/capture.tsx` — reads clipboard on mount, pre-fills URL if starts with http, Form with URL/Title/Note/Why fields, on submit calls `writePendingCapture` + toast + `popToRoot`
+- `assets/README.md` — placeholder note for icon.png
+
+**Decided:** `fileBookmark` lives in `github.ts` (not search.tsx) so it can be reused by other commands later. Pending captures use the same key=value text format as the iOS Shortcut.
+
+**Why:** Consistency across capture surfaces is a core design constraint. The pending-file approach means no read-modify-write race on bookmarks.json for captures, matching the iOS pattern exactly.
+
+---
+
+### 2026-06-15 - Fix Raycast Extension tsconfig.json
+
+**Investigated:** `npm run build` failing with 23 TypeScript errors. Root cause: `tsconfig.json` extended `@raycast/api/tsconfig.json` which doesn't exist on disk, so no JSX support, no esModuleInterop, and node_modules types were being checked.
+
+**Changed:** `/Users/mattparker/Documents/Code/hikae/raycast/tsconfig.json` — replaced single-line `extends` with full standalone config (`jsx: react-jsx`, `esModuleInterop: true`, `skipLibCheck: true`, `moduleResolution: node`, `include: src/**/*`, `exclude: node_modules/dist`).
+
+**Decided:** Standalone tsconfig rather than trying to locate/fix the extends path.
+
+**Why:** `@raycast/api/tsconfig.json` simply doesn't exist in the installed package. A standalone config with the right options resolves all 23 errors cleanly. Build now passes: `ready - built extension successfully`.
+
+---

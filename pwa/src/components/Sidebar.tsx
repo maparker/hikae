@@ -1,11 +1,11 @@
 import { clsx } from 'clsx'
 import { twMerge } from 'tailwind-merge'
-import { Inbox, FileText, BookOpen, Archive, LogOut, Settings } from 'lucide-react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Inbox, FileText, BookOpen, Archive, Folder, LogOut, Settings, Zap } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { useData } from '../context/DataContext'
-import { Badge } from './ui/badge'
 import type { BookmarkStatus } from '../types'
+import hikaeLogo from '../assets/hikae-icon.png'
 
 const cn = (...args: Parameters<typeof clsx>) => twMerge(clsx(...args))
 
@@ -25,6 +25,21 @@ const STATUS_ITEMS: { status: BookmarkStatus; label: string; icon: typeof Inbox 
   { status: 'archived', label: 'Archived', icon: Archive },
 ]
 
+const CAPTURE_CHIPS = [
+  { badge: 'iOS', label: 'iOS Shortcut', sub: 'Share Sheet' },
+  { badge: '⌘', label: 'macOS', sub: 'Menu bar' },
+  { badge: 'R', label: 'Raycast', sub: 'Quick capture' },
+  { badge: '◉', label: 'Web', sub: 'This app' },
+]
+
+function SectionLabel({ children }: { children: React.ReactNode }) {
+  return (
+    <p className="mb-1.5 px-[9px] font-sans text-[10.5px] font-semibold uppercase tracking-[.13em] text-ink-3">
+      {children}
+    </p>
+  )
+}
+
 export function Sidebar({
   selectedStatus,
   setSelectedStatus,
@@ -42,9 +57,6 @@ export function Sidebar({
 
   const countByFolder = (folderId: string) =>
     data?.bookmarks.filter((b) => b.folder_id === folderId && b.status !== 'deleted').length ?? 0
-
-  const countByTag = (tagId: string) =>
-    data?.bookmarks.filter((b) => b.tag_ids.includes(tagId) && b.status !== 'deleted').length ?? 0
 
   const handleStatusClick = (status: BookmarkStatus) => {
     setSelectedStatus(status)
@@ -64,109 +76,195 @@ export function Sidebar({
     setSelectedFolderId(null)
   }
 
+  const inboxCount = countByStatus('inbox')
+  const activeFolders = data?.folders.filter((f) => !f.archived) ?? []
+
   return (
-    <aside className="flex h-screen w-60 flex-shrink-0 flex-col border-r border-gray-200 bg-gray-50">
-      <div className="px-4 py-5">
-        <Link to="/" className="text-xl font-bold text-gray-900">
-          Hikae
-        </Link>
+    <aside className="flex h-screen w-[248px] flex-shrink-0 flex-col border-r border-hairline-warm bg-sidebar">
+      {/* Brand row */}
+      <div className="flex items-center gap-[11px] px-[18px] pb-4 pt-[18px]">
+        <img
+          src={hikaeLogo}
+          alt="Hikae"
+          className="h-[30px] w-[30px] flex-shrink-0"
+          style={{
+            borderRadius: '6.7px',
+            boxShadow: '0 1px 2px rgba(80,55,20,.18)',
+          }}
+        />
+        <div className="flex flex-col">
+          <span className="font-serif text-[18px] font-semibold leading-tight tracking-[.01em] text-ink">
+            Hikae
+          </span>
+          <span
+            className="font-serif text-[11px] font-medium leading-tight tracking-[.18em]"
+            style={{ color: '#A0967F' }}
+          >
+            控え · kept for later
+          </span>
+        </div>
       </div>
 
-      <nav className="flex-1 overflow-y-auto px-2">
+      <nav className="flex-1 overflow-y-auto px-2 pb-2">
+        {/* STATUS */}
         <div className="mb-4">
-          <p className="mb-1 px-2 text-xs font-semibold uppercase tracking-wider text-gray-400">
-            Status
-          </p>
-          {STATUS_ITEMS.map(({ status, label, icon: Icon }) => (
-            <button
-              key={status}
-              onClick={() => handleStatusClick(status)}
-              className={cn(
-                'flex w-full items-center justify-between rounded-md px-2 py-1.5 text-sm transition-colors',
-                selectedStatus === status
-                  ? 'bg-gray-200 font-medium text-gray-900'
-                  : 'text-gray-600 hover:bg-gray-100'
-              )}
-            >
-              <span className="flex items-center gap-2">
-                <Icon className="h-4 w-4" />
-                {label}
-              </span>
-              <span className="text-xs text-gray-400">{countByStatus(status)}</span>
-            </button>
-          ))}
+          <SectionLabel>Status</SectionLabel>
+          {STATUS_ITEMS.map(({ status, label, icon: Icon }) => {
+            const active = selectedStatus === status
+            const count = countByStatus(status)
+            return (
+              <button
+                key={status}
+                onClick={() => handleStatusClick(status)}
+                className={cn(
+                  'flex w-full items-center justify-between rounded-[7px] px-[9px] py-[7px] text-[13.5px] transition-colors duration-150',
+                  active
+                    ? 'bg-accent-wash font-semibold'
+                    : 'font-normal hover:bg-chip-bg-alt'
+                )}
+              >
+                <span className="flex items-center gap-2">
+                  <Icon
+                    className="h-4 w-4"
+                    style={{ color: active ? '#C13D2B' : '#A79E8E' }}
+                  />
+                  <span style={{ color: active ? '#A8341F' : '#5A5345' }}>{label}</span>
+                </span>
+                <span className="flex items-center gap-1.5">
+                  {status === 'inbox' && inboxCount > 0 && (
+                    <span className="h-1.5 w-1.5 rounded-full bg-accent" />
+                  )}
+                  <span
+                    className="font-mono text-[11px]"
+                    style={{ color: active ? '#C2776B' : '#A79E8E' }}
+                  >
+                    {count}
+                  </span>
+                </span>
+              </button>
+            )
+          })}
         </div>
 
-        {data && data.folders.filter((f) => !f.archived).length > 0 && (
+        {/* FOLDERS */}
+        {activeFolders.length > 0 && (
           <div className="mb-4">
-            <p className="mb-1 px-2 text-xs font-semibold uppercase tracking-wider text-gray-400">
-              Folders
-            </p>
-            {data.folders
-              .filter((f) => !f.archived)
-              .map((folder) => (
+            <SectionLabel>Folders</SectionLabel>
+            {activeFolders.map((folder) => {
+              const active = selectedFolderId === folder.id
+              return (
                 <button
                   key={folder.id}
                   onClick={() => handleFolderClick(folder.id)}
                   className={cn(
-                    'flex w-full items-center justify-between rounded-md px-2 py-1.5 text-sm transition-colors',
-                    selectedFolderId === folder.id
-                      ? 'bg-gray-200 font-medium text-gray-900'
-                      : 'text-gray-600 hover:bg-gray-100'
+                    'flex w-full items-center justify-between rounded-[7px] px-[9px] py-[7px] text-[13px] transition-colors duration-150',
+                    active ? 'bg-accent-wash font-medium' : 'hover:bg-chip-bg-alt'
                   )}
                 >
-                  <span className="truncate">{folder.name}</span>
-                  <span className="text-xs text-gray-400">{countByFolder(folder.id)}</span>
+                  <span className="flex min-w-0 items-center gap-2">
+                    <Folder className="h-4 w-4 flex-shrink-0 text-icon-default" />
+                    <span className="truncate" style={{ color: active ? '#A8341F' : '#5A5345' }}>
+                      {folder.name}
+                    </span>
+                  </span>
+                  <span className="font-mono text-[11px] text-ink-3">
+                    {countByFolder(folder.id)}
+                  </span>
                 </button>
-              ))}
+              )
+            })}
           </div>
         )}
 
+        {/* TAGS */}
         {data && data.tags.length > 0 && (
           <div className="mb-4">
-            <p className="mb-1 px-2 text-xs font-semibold uppercase tracking-wider text-gray-400">
-              Tags
-            </p>
-            <div className="flex flex-wrap gap-1 px-2">
-              {data.tags.map((tag) => (
-                <button key={tag.id} onClick={() => handleTagClick(tag.id)}>
-                  <Badge
-                    variant={selectedTagId === tag.id ? 'default' : 'secondary'}
-                    className="cursor-pointer"
+            <SectionLabel>Tags</SectionLabel>
+            <div className="flex flex-wrap gap-1 px-[9px]">
+              {data.tags.map((tag) => {
+                const active = selectedTagId === tag.id
+                return (
+                  <button
+                    key={tag.id}
+                    onClick={() => handleTagClick(tag.id)}
+                    className={cn(
+                      'rounded-full px-2 py-0.5 text-[12px] transition-colors duration-150',
+                      active
+                        ? 'bg-accent-wash font-medium text-accent-ink'
+                        : 'bg-chip-bg-alt hover:bg-[#DED3BC]'
+                    )}
+                    style={{ color: active ? undefined : '#6F675B' }}
                   >
-                    {tag.name} ({countByTag(tag.id)})
-                  </Badge>
-                </button>
-              ))}
+                    <span className="font-mono text-[10px] text-ink-mono-faint">#</span>
+                    {tag.name}
+                  </button>
+                )
+              })}
             </div>
           </div>
         )}
+
+        {/* CAPTURE ANYWHERE */}
+        <div className="mx-1 rounded-[10px] border border-chip-bg-alt bg-surface-sunken p-[11px]">
+          <div className="mb-2 flex items-center justify-between">
+            <span className="font-sans text-[10.5px] font-semibold uppercase tracking-[.13em] text-ink-3">
+              Capture Anywhere
+            </span>
+            <Zap className="h-3.5 w-3.5 text-icon-default" />
+          </div>
+          <div className="grid grid-cols-2 gap-1.5">
+            {CAPTURE_CHIPS.map(({ badge, label, sub }) => (
+              <div
+                key={label}
+                className="flex items-center gap-2 rounded-[7px] border border-[#EBE3D3] bg-surface p-2"
+              >
+                <span className="flex h-[18px] w-[18px] flex-shrink-0 items-center justify-center rounded-[4px] bg-chip-bg font-mono text-[9px] font-medium text-[#8A7F68]">
+                  {badge}
+                </span>
+                <div className="min-w-0">
+                  <p className="truncate text-[11px] font-medium text-ink-2">{label}</p>
+                  <p className="truncate font-mono text-[9.5px] text-ink-mono-faint">{sub}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
       </nav>
 
-      <div className="border-t border-gray-200 px-4 py-3">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2 overflow-hidden">
-            {avatarUrl && (
-              <img src={avatarUrl} alt={user ?? ''} className="h-7 w-7 rounded-full" />
-            )}
-            <span className="truncate text-sm text-gray-700">{user}</span>
-          </div>
-          <div className="flex items-center gap-1">
-            <button
-              onClick={() => navigate('/organize')}
-              className="rounded p-1 text-gray-400 hover:bg-gray-200 hover:text-gray-600"
-              title="Organize"
+      {/* User footer */}
+      <div className="flex items-center justify-between border-t border-hairline-warm px-4 py-[11px]">
+        <div className="flex min-w-0 items-center gap-2">
+          {avatarUrl ? (
+            <img
+              src={avatarUrl}
+              alt={user ?? ''}
+              className="h-[26px] w-[26px] flex-shrink-0 rounded-full"
+            />
+          ) : (
+            <div
+              className="flex h-[26px] w-[26px] flex-shrink-0 items-center justify-center rounded-full text-[11px] font-medium text-white"
+              style={{ background: 'linear-gradient(135deg, #C9BDA2, #9C8F73)' }}
             >
-              <Settings className="h-4 w-4" />
-            </button>
-            <button
-              onClick={signOut}
-              className="rounded p-1 text-gray-400 hover:bg-gray-200 hover:text-gray-600"
-              title="Sign out"
-            >
-              <LogOut className="h-4 w-4" />
-            </button>
-          </div>
+              {(user ?? 'U')[0].toUpperCase()}
+            </div>
+          )}
+          <span className="truncate text-[13px] text-ink-2">{user}</span>
+        </div>
+        <div className="flex items-center gap-0.5">
+          <button
+            onClick={() => navigate('/organize')}
+            className="rounded-[6px] p-1.5 text-ink-3 transition-colors hover:bg-chip-bg-alt hover:text-ink-2"
+            title="Organize"
+          >
+            <Settings className="h-4 w-4" />
+          </button>
+          <button
+            onClick={signOut}
+            className="rounded-[6px] p-1.5 text-ink-3 transition-colors hover:bg-chip-bg-alt hover:text-ink-2"
+            title="Sign out"
+          >
+            <LogOut className="h-4 w-4" />
+          </button>
         </div>
       </div>
     </aside>
