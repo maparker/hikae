@@ -47,6 +47,12 @@ export function DataProvider({ children }: { children: ReactNode }) {
     load()
   }, [load])
 
+  useEffect(() => {
+    const handler = () => { if (document.visibilityState === 'visible') load() }
+    document.addEventListener('visibilitychange', handler)
+    return () => document.removeEventListener('visibilitychange', handler)
+  }, [load])
+
   const save = useCallback(
     async (updatedData: BookmarksData, message: string) => {
       if (!token || !user || !sha) throw new Error('Not ready')
