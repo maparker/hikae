@@ -3,50 +3,58 @@ import SwiftUI
 struct InboxRowView: View {
     let bookmark: Bookmark
     @EnvironmentObject var sync: SyncService
+    @State private var isHovered = false
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 4) {
-            Text(bookmark.title)
-                .font(.subheadline)
-                .lineLimit(2)
-                .frame(maxWidth: .infinity, alignment: .leading)
-
-            HStack {
+        HStack(alignment: .top, spacing: 8) {
+            VStack(alignment: .leading, spacing: 2) {
+                Text(bookmark.title)
+                    .font(.subheadline)
+                    .lineLimit(2)
+                    .frame(maxWidth: .infinity, alignment: .leading)
                 Text(bookmark.host)
                     .font(.caption)
                     .foregroundStyle(.secondary)
                     .lineLimit(1)
-                Spacer()
-                Button("Open") {
-                    if let url = URL(string: bookmark.url) {
-                        NSWorkspace.shared.open(url)
+            }
+
+            if isHovered {
+                HStack(spacing: 2) {
+                    iconButton("arrow.up.right.square", help: "Open") {
+                        if let url = URL(string: bookmark.url) {
+                            NSWorkspace.shared.open(url)
+                        }
+                    }
+                    iconButton("checkmark", help: "File") {
+                        Task { await sync.file(bookmark) }
+                    }
+                    iconButton("archivebox", help: "Archive") {
+                        Task { await sync.archive(bookmark) }
+                    }
+                    iconButton("trash", help: "Delete", destructive: true) {
+                        Task { await sync.delete(bookmark) }
                     }
                 }
-                .buttonStyle(.bordered)
-                .controlSize(.small)
-
-                Button("File") {
-                    Task { await sync.file(bookmark) }
-                }
-                .buttonStyle(.bordered)
-                .controlSize(.small)
-
-                Button("Archive") {
-                    Task { await sync.archive(bookmark) }
-                }
-                .buttonStyle(.bordered)
-                .controlSize(.small)
-
-                Button(role: .destructive) {
-                    Task { await sync.delete(bookmark) }
-                } label: {
-                    Image(systemName: "trash")
-                }
-                .buttonStyle(.bordered)
-                .controlSize(.small)
+                .transition(.opacity)
             }
         }
         .padding(.horizontal, 12)
         .padding(.vertical, 8)
+        .contentShape(Rectangle())
+        .onHover { isHovered = $0 }
+        .animation(.easeInOut(duration: 0.12), value: isHovered)
+    }
+
+    @ViewBuilder
+    private func iconButton(_ icon: String, help: String, destructive: Bool = false, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            Image(systemName: icon)
+                .font(.system(size: 11))
+                .foregroundStyle(destructive ? Color.red : Color.secondary)
+                .frame(width: 24, height: 24)
+                .background(.quaternary, in: RoundedRectangle(cornerRadius: 5))
+        }
+        .buttonStyle(.plain)
+        .help(help)
     }
 }
