@@ -1,0 +1,55 @@
+{
+  "$schema": "https://www.raycast.com/schemas/extension.json",
+  "name": "hikae",
+  "title": "Hikae",
+  "description": "Personal bookmark capture and search",
+  "icon": "assets/icon.png",
+  "author": "maparker",
+  "license": "MIT",
+  "commands": [
+    {
+      "name": "search",
+      "title": "Search Bookmarks",
+      "description": "Search and manage your Hikae bookmarks",
+      "mode": "view"
+    },
+    {
+      "name": "capture",
+      "title": "Capture Bookmark",
+      "description": "Save a URL to your Hikae pending queue",
+      "mode": "view"
+    }
+  ],
+  "preferences": [
+    {
+      "name": "github_pat",
+      "type": "password",
+      "title": "GitHub PAT",
+      "description": "Personal Access Token with repo scope",
+      "required": true
+    },
+    {
+      "name": "github_repo",
+      "type": "textfield",
+      "title": "Data Repository",
+      "description": "GitHub repository containing your Hikae data",
+      "default": "maparker/hikae-data",
+      "required": true
+    }
+  ],
+  "dependencies": {
+    "@raycast/api": "^1.85.2",
+    "@raycast/utils": "^1.19.0"
+  },
+  "devDependencies": {
+    "@raycast/eslint-config": "^2.0.4",
+    "typescript": "^5.4.5"
+  },
+  "scripts": {
+    "build": "ray build -e dist -o dist",
+    "dev": "ray develop",
+    "fix-lint": "ray lint --fix",
+    "lint": "ray lint",
+    "publish": "npx @raycast/api@latest publish"
+  }
+}
