@@ -1,0 +1,10 @@
+# macOS
+.DS_Store
+
+# Mac app build output
+macos/build/
+
+# Node
+pwa/node_modules/
+raycast/node_modules/
+package-lock.json

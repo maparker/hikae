@@ -1,0 +1,41 @@
+name: Build Mac App
+
+on:
+  push:
+    branches: [master]
+    paths: [macos/**]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build
+        run: |
+          xcodebuild \
+            -project macos/Hikae/Hikae/Hikae.xcodeproj \
+            -scheme Hikae \
+            -configuration Release \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGNING_ALLOWED=NO \
+            CONFIGURATION_BUILD_DIR="$GITHUB_WORKSPACE/macos/build" \
+            -quiet \
+            build
+
+      - name: Sign (ad-hoc)
+        run: |
+          xattr -cr macos/build/Hikae.app
+          codesign --force --deep --sign - macos/build/Hikae.app
+
+      - name: Zip
+        run: |
+          cd macos/build
+          zip -r --symlinks Hikae.zip Hikae.app
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Hikae-${{ github.sha }}
+          path: macos/build/Hikae.zip
+          retention-days: 30
