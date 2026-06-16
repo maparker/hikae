@@ -145,3 +145,61 @@
 **Why:** `@raycast/api/tsconfig.json` simply doesn't exist in the installed package. A standalone config with the right options resolves all 23 errors cleanly. Build now passes: `ready - built extension successfully`.
 
 ---
+
+### 2026-06-15 22:01 - iOS Home Screen Icon
+
+**Investigated:** Available icon files at `/Users/mattparker/Downloads/design_handoff_hikae_appicon/AppIcon.appiconset/` — sizes 16×16 through 512×512. Confirmed `icon_512x512.png` is the correct Hikae hanko stamp.
+
+**Changed:**
+- Copied `icon_512x512.png` → `pwa/public/apple-touch-icon.png`
+- `pwa/index.html`: added `<link rel="apple-touch-icon" href="/apple-touch-icon.png" />` plus three `apple-mobile-web-app-*` meta tags (capable, status-bar-style, title)
+- Committed and pushed to master; GitHub Action auto-deploys to `maparker.github.io/hikae`
+
+**Decided:** Use the 512×512 icon as `apple-touch-icon.png`. iOS Safari scales it down; larger is better.
+
+**Why:** iOS reads `apple-touch-icon` link from `<head>` when user taps "Add to Home Screen." Without it, Safari uses a screenshot thumbnail. Vite copies files from `public/` to `dist/` verbatim, so no transform needed.
+
+### 2026-06-15 22:10 - Fix "new bookmarks not appearing after iOS shortcut"
+
+**Investigated:** Both the PWA (DataContext) and macOS menu bar app (SyncService/MenuBarView) were fetching data only on initial load with no on-focus/on-open refresh.
+
+**Changed:**
+- `pwa/src/context/DataContext.tsx`: Added `visibilitychange` event listener that calls `load()` when the page becomes visible — so switching back to the PWA after using the iOS shortcut triggers an immediate re-fetch
+- `macos/Hikae/MenuBarView.swift` + `macos/Hikae/Hikae/Hikae/MenuBarView.swift`: Added `.onAppear { Task { await sync.sync() } }` on the root VStack so opening the menu bar popover always triggers a sync
+- Pushed all to master; PWA auto-deployed via GitHub Actions
+
+**Decided:** On-demand refresh on focus/open rather than more aggressive polling.
+
+**Why:** The 5-minute macOS timer is fine for background polling, but users expect immediate freshness when they actively open the app. `visibilitychange` on the web and `.onAppear` on the mac are the minimal correct hooks for this.
+
+### 2026-06-15 23:45 - iOS shortcut → mac/PWA sync debugging session
+
+**Investigated:** End-to-end flow from iOS Shortcut capture to mac app and PWA display. Multiple bugs found and fixed in sequence.
+
+**Changed:**
+- `pwa/public/apple-touch-icon.png`: Added iOS home screen icon (512×512 from design handoff)
+- `pwa/index.html`: Added apple-touch-icon link + PWA meta tags
+- `pwa/src/context/DataContext.tsx`: Re-fetch on visibilitychange; merge pending files on every load; track lastFetched timestamp
+- `pwa/src/lib/github.ts`: Added cache: 'no-store' to all fetches; added mergePendingFiles() function; filter pending by !gitkeep (not .json extension)
+- `pwa/src/mobile/MobileSettingsScreen.tsx`: Show lastFetched separately from meta.last_modified; manual refresh button
+- `macos/Hikae/Hikae/Hikae/SyncService.swift`: Wrap listDirectory in own try/catch (404 no longer aborts sync); fix deleted_at empty-string check; add archive/delete actions; add [Hikae] print diagnostics; pending file filter changed from .json to !.gitkeep; parseFilenameDate strips dashes from yyyyMMdd-HHmmss format
+- `macos/Hikae/Hikae/Hikae/GitHubService.swift`: req.cachePolicy = .reloadIgnoringLocalCacheData; verbose entry logging (later trimmed); log non-array responses
+- `macos/Hikae/Hikae/Hikae/MenuBarView.swift`: SettingsLink replaces openSettings() env action; power button (NSApp.terminate); always-visible footer with sync time + count; onAppear sync trigger
+- `macos/Hikae/Hikae/Hikae/InboxRowView.swift`: Hover-reveal icon buttons (↗ ✓ archivebox 🗑); trash is red
+- `macos/Hikae/Hikae/Hikae/Models.swift`: PendingCapture.parse() tries JSON first, falls back to KEY=VALUE
+
+**Decided:** Accept any filename in data/pending/ (not just .json); KEY=VALUE pending format is what the actual shortcut writes
+
+**Why:** The iOS Shortcut writes files named yyyyMMdd-HHmmss (no extension) in KEY=VALUE format — the original spec assumed .json which was never implemented on-device. Filter on !.gitkeep is more robust than .hasSuffix(".json"). URLSession was caching GitHub API directory listings; .reloadIgnoringLocalCacheData fixes it.
+
+---
+
+### 2026-06-15 - PWA: Sync pill shows last-fetched time + tap/click to force sync
+
+**Changed:**
+- `pwa/src/mobile/MobileInboxScreen.tsx`: Added `timeAgo` helper; imported `lastFetched` from `useData()`; converted static "synced" div to a tappable `<button>` that calls `refresh()`, shows "synced · Xm ago" using `lastFetched`, and shows "syncing…" with a grey dot while in-flight. Pull-to-refresh still works in addition.
+- `pwa/src/pages/Home.tsx`: Imported `refresh` and `lastFetched` from `useData()`; converted static chip to a clickable `<button>`; switched from `data.meta.last_modified` (when data was last *written*) to `lastFetched` (when the PWA last *fetched*); shows "syncing…" while loading.
+
+**Decided:** Use `lastFetched` (set in DataContext after each successful `load()`) rather than `meta.last_modified` for the sync timestamp in both pills.
+
+**Why:** `meta.last_modified` reflects when any client last wrote the file — it could be hours old even if the PWA just fetched 5 seconds ago. `lastFetched` tells the user how stale *their view* is, which is what they actually want to know.
