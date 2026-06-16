@@ -4,6 +4,13 @@
 # Mac app build output
 macos/build/
 
+# Xcode user state
+*.xcuserstate
+xcuserdata/
+
+# PWA build output (built by CI, not committed)
+pwa/dist/
+
 # Node
 pwa/node_modules/
 raycast/node_modules/

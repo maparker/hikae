@@ -203,3 +203,16 @@
 **Decided:** Use `lastFetched` (set in DataContext after each successful `load()`) rather than `meta.last_modified` for the sync timestamp in both pills.
 
 **Why:** `meta.last_modified` reflects when any client last wrote the file — it could be hours old even if the PWA just fetched 5 seconds ago. `lastFetched` tells the user how stale *their view* is, which is what they actually want to know.
+
+---
+
+### 2026-06-16 - PWA: Inline tag and folder creation in edit modal
+
+**Investigated:** `EditBookmarkModal` required tags and folders to already exist before they could be applied — no way to create them without leaving the modal and going to Organize first.
+
+**Changed:**
+- `pwa/src/components/EditBookmarkModal.tsx`: Added `pendingTags` and `pendingFolders` local state arrays; "New" button next to folder dropdown shows an inline text input (Enter to confirm, Escape to cancel) that creates a folder and auto-selects it; "+ New tag" button below tags list does the same for tags and auto-checks the new tag. Duplicate detection by name (case-insensitive) reuses existing entries instead of creating duplicates. All pending tags/folders are merged into `BookmarksData` on save — one atomic write creates the folder/tag and updates the bookmark.
+
+**Decided:** Create inline in the modal rather than linking out to Organize. New tags/folders are held in component state and only written to GitHub on Save — not eagerly committed.
+
+**Why:** The modal is the natural point of intent. Forcing a detour to Organize breaks flow. Deferring the write until Save keeps the change atomic — no orphaned tags if the user cancels.
