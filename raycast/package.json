@@ -18,6 +18,12 @@
       "title": "Capture Bookmark",
       "description": "Save a URL to your Hikae pending queue",
       "mode": "view"
+    },
+    {
+      "name": "note",
+      "title": "Quick Note",
+      "description": "Save a short note to your Hikae inbox",
+      "mode": "view"
     }
   ],
   "preferences": [

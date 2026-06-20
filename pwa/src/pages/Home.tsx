@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState, useMemo } from 'react'
-import { Inbox, Search, X } from 'lucide-react'
+import { Inbox, Search, X, PenLine } from 'lucide-react'
 import { Sidebar } from '../components/Sidebar'
 import { BookmarkRow } from '../components/BookmarkRow'
 import { DetailPanel } from '../components/DetailPanel'
@@ -42,6 +42,7 @@ function DesktopHome() {
   const [editingBookmark, setEditingBookmark] = useState<Bookmark | null>(null)
   const [captureOpen, setCaptureOpen] = useState(false)
   const [captureInitialUrl, setCaptureInitialUrl] = useState('')
+  const [captureMode, setCaptureMode] = useState<'link' | 'note'>('link')
   const [searchActive, setSearchActive] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const searchInputRef = useRef<HTMLInputElement>(null)
@@ -127,6 +128,7 @@ function DesktopHome() {
 
   const handleCaptureBarFocus = () => {
     setCaptureInitialUrl('')
+    setCaptureMode('link')
     setCaptureOpen(true)
     captureBarRef.current?.blur()
   }
@@ -214,6 +216,15 @@ function DesktopHome() {
           <kbd className="rounded border border-hairline bg-surface px-1.5 py-0.5 font-mono text-[10.5px] text-ink-mono shadow-[0_2px_0_#E6DECE]">
             ⌘V
           </kbd>
+          <div className="h-3.5 w-px bg-hairline" />
+          <button
+            onClick={() => { setCaptureMode('note'); setCaptureOpen(true) }}
+            className="flex items-center gap-1.5 rounded-[6px] px-2 py-1 text-ink-3 transition-colors hover:bg-hairline-faint hover:text-ink-2"
+            title="New note"
+          >
+            <PenLine className="h-3.5 w-3.5" />
+            <span className="font-mono text-[11px]">Note</span>
+          </button>
         </div>
 
         {/* Bookmark list */}
@@ -248,6 +259,7 @@ function DesktopHome() {
       {captureOpen && (
         <DesktopCaptureModal
           initialUrl={captureInitialUrl}
+          initialMode={captureMode}
           onClose={() => setCaptureOpen(false)}
         />
       )}

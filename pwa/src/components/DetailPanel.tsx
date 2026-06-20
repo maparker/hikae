@@ -1,4 +1,4 @@
-import { ExternalLink, Zap, FolderInput, Archive, Edit2 } from 'lucide-react'
+import { ExternalLink, Zap, FolderInput, Archive, Edit2, PenLine } from 'lucide-react'
 import { useData } from '../context/DataContext'
 import type { Bookmark, BookmarksData } from '../types'
 
@@ -61,7 +61,7 @@ export function DetailPanel({ bookmark, onEdit }: DetailPanelProps) {
 
   return (
     <div className="flex w-[340px] flex-shrink-0 flex-col overflow-y-auto border-l border-hairline bg-surface p-[22px]">
-      {/* Status + Open */}
+      {/* Status + Open/Note badge */}
       <div className="flex items-center justify-between">
         <span
           className="rounded-full px-2.5 py-0.5 font-mono text-[10.5px] font-medium uppercase tracking-wider"
@@ -69,15 +69,22 @@ export function DetailPanel({ bookmark, onEdit }: DetailPanelProps) {
         >
           {bookmark.status}
         </span>
-        <a
-          href={bookmark.url}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="flex items-center gap-1 text-[12px] font-medium text-accent-ink hover:underline"
-        >
-          <ExternalLink className="h-[13px] w-[13px]" />
-          Open
-        </a>
+        {bookmark.type === 'note' ? (
+          <span className="flex items-center gap-1 text-[12px] font-medium text-ink-3">
+            <PenLine className="h-[13px] w-[13px]" />
+            Note
+          </span>
+        ) : (
+          <a
+            href={bookmark.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-1 text-[12px] font-medium text-accent-ink hover:underline"
+          >
+            <ExternalLink className="h-[13px] w-[13px]" />
+            Open
+          </a>
+        )}
       </div>
 
       {/* Title */}
@@ -87,6 +94,13 @@ export function DetailPanel({ bookmark, onEdit }: DetailPanelProps) {
       >
         {bookmark.title}
       </h1>
+
+      {/* Note body (notes only — shown prominently) */}
+      {bookmark.type === 'note' && bookmark.note && (
+        <p className="mt-3 text-[14px] leading-relaxed" style={{ color: '#4A443A' }}>
+          {bookmark.note}
+        </p>
+      )}
 
       {/* Why kept */}
       {bookmark.why && (
@@ -101,8 +115,8 @@ export function DetailPanel({ bookmark, onEdit }: DetailPanelProps) {
         </div>
       )}
 
-      {/* Note */}
-      {bookmark.note && (
+      {/* Note field for bookmarks (not notes) */}
+      {bookmark.type !== 'note' && bookmark.note && (
         <p className="mt-3 text-[13px] leading-relaxed" style={{ color: '#6A6256' }}>
           {bookmark.note}
         </p>
@@ -110,12 +124,18 @@ export function DetailPanel({ bookmark, onEdit }: DetailPanelProps) {
 
       {/* Meta table */}
       <div className="mt-4 space-y-[11px] border-t border-hairline-faint pt-4">
-        {[
-          { key: 'Source', value: source?.name ?? '—', mono: false },
-          { key: 'Domain', value: domain(bookmark.url), mono: true },
-          { key: 'Folder', value: folder?.name ?? '—', mono: false },
-          { key: 'Captured', value: formatDate(bookmark.captured_at), mono: true },
-        ].map(({ key, value, mono }) => (
+        {(bookmark.type === 'note'
+          ? [
+              { key: 'Folder', value: folder?.name ?? '—', mono: false },
+              { key: 'Captured', value: formatDate(bookmark.captured_at), mono: true },
+            ]
+          : [
+              { key: 'Source', value: source?.name ?? '—', mono: false },
+              { key: 'Domain', value: domain(bookmark.url), mono: true },
+              { key: 'Folder', value: folder?.name ?? '—', mono: false },
+              { key: 'Captured', value: formatDate(bookmark.captured_at), mono: true },
+            ]
+        ).map(({ key, value, mono }) => (
           <div key={key} className="flex items-baseline justify-between gap-4">
             <span className="text-[11.5px] uppercase tracking-wider text-ink-3">{key}</span>
             <span

@@ -1,4 +1,4 @@
-import { ExternalLink, FolderInput, Archive } from 'lucide-react'
+import { ExternalLink, FolderInput, Archive, PenLine } from 'lucide-react'
 import { useData } from '../context/DataContext'
 import type { Bookmark, BookmarksData } from '../types'
 
@@ -68,18 +68,27 @@ export function BookmarkRow({ bookmark, isSelected, onSelect }: BookmarkRowProps
             <span className="min-w-0 flex-1 truncate text-[14.5px] font-medium text-ink-title">
               {bookmark.title}
             </span>
-            <ExternalLink className="h-[13px] w-[13px] flex-shrink-0 text-[#C9BFA9]" />
+            {bookmark.type === 'note'
+              ? <PenLine className="h-[13px] w-[13px] flex-shrink-0 text-[#C9BFA9]" />
+              : <ExternalLink className="h-[13px] w-[13px] flex-shrink-0 text-[#C9BFA9]" />
+            }
           </div>
 
           {/* Metadata */}
           <div className="mt-[5px] flex flex-wrap items-center gap-x-[5px] font-mono text-[11.5px] text-ink-mono">
-            {source && (
+            {bookmark.type === 'note' ? (
+              <span className="font-medium text-[#6F675B]">note</span>
+            ) : (
               <>
-                <span className="font-medium text-[#6F675B]">{source.name}</span>
-                <span>·</span>
+                {source && (
+                  <>
+                    <span className="font-medium text-[#6F675B]">{source.name}</span>
+                    <span>·</span>
+                  </>
+                )}
+                <span>{domain(bookmark.url)}</span>
               </>
             )}
-            <span>{domain(bookmark.url)}</span>
             <span>·</span>
             <span>{timeAgo(bookmark.captured_at)}</span>
             {folder && (
@@ -90,8 +99,16 @@ export function BookmarkRow({ bookmark, isSelected, onSelect }: BookmarkRowProps
             )}
           </div>
 
+          {/* Note body preview */}
+          {bookmark.type === 'note' && bookmark.note && (
+            <div className="mt-2 flex gap-2">
+              <div className="mt-[3px] w-0.5 flex-shrink-0 self-stretch rounded-full bg-[#C9BFA9]" />
+              <p className="line-clamp-2 text-[13px] leading-[1.45] text-[#6A6256]">{bookmark.note}</p>
+            </div>
+          )}
+
           {/* Why */}
-          {bookmark.why && (
+          {bookmark.type !== 'note' && bookmark.why && (
             <div className="mt-2 flex gap-2">
               <div className="mt-[3px] w-0.5 flex-shrink-0 self-stretch rounded-full bg-accent" />
               <p className="text-[13px] leading-[1.45] text-[#6A6256]">{bookmark.why}</p>

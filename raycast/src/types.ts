@@ -7,6 +7,7 @@ export interface Source {
 
 export interface Bookmark {
   id: string;
+  type?: "bookmark" | "note";
   url: string;
   title: string;
   source_id: string | null;

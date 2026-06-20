@@ -19,9 +19,11 @@ export interface Source {
 }
 
 export type BookmarkStatus = 'inbox' | 'filed' | 'read' | 'archived' | 'deleted'
+export type BookmarkType = 'bookmark' | 'note'
 
 export interface Bookmark {
   id: string
+  type?: BookmarkType
   url: string
   title: string
   folder_id: string | null

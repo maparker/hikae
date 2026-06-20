@@ -84,8 +84,8 @@ export default function SearchCommand() {
             ]}
             actions={
               <ActionPanel>
-                <Action.OpenInBrowser url={b.url} />
-                <Action.CopyToClipboard title="Copy URL" content={b.url} />
+                {b.type !== 'note' && <Action.OpenInBrowser url={b.url} />}
+                {b.type !== 'note' && <Action.CopyToClipboard title="Copy URL" content={b.url} />}
                 <Action title="File" onAction={() => handleFile(b)} />
                 <Action.OpenInBrowser title="Open in Hikae" url="https://maparker.github.io/hikae" />
               </ActionPanel>
