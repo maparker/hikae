@@ -9,6 +9,8 @@ class SyncService: ObservableObject {
     @Published var error: String?
 
     var inboxCount: Int { inboxItems.count }
+    var bookmarkInboxCount: Int { inboxItems.filter { !$0.isNote }.count }
+    var noteInboxCount: Int { inboxItems.filter { $0.isNote }.count }
 
     private let gh = GitHubService.shared
     private let iso = ISO8601DateFormatter()

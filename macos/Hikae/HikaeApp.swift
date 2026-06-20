@@ -9,10 +9,17 @@ struct HikaeApp: App {
             MenuBarView()
                 .environmentObject(sync)
         } label: {
-            HStack(spacing: 4) {
-                Image(systemName: "bookmark")
-                if sync.inboxCount > 0 {
-                    Text("\(sync.inboxCount)")
+            HStack(spacing: 5) {
+                if sync.bookmarkInboxCount > 0 || sync.inboxCount == 0 {
+                    Image(systemName: "bookmark")
+                    if sync.bookmarkInboxCount > 0 {
+                        Text("\(sync.bookmarkInboxCount)")
+                            .font(.caption.monospacedDigit())
+                    }
+                }
+                if sync.noteInboxCount > 0 {
+                    Image(systemName: "pencil")
+                    Text("\(sync.noteInboxCount)")
                         .font(.caption.monospacedDigit())
                 }
             }
