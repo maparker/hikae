@@ -9,6 +9,8 @@ class SyncService: ObservableObject {
     @Published var error: String?
 
     var inboxCount: Int { inboxItems.count }
+    var bookmarkInboxCount: Int { inboxItems.filter { !$0.isNote }.count }
+    var noteInboxCount: Int { inboxItems.filter { $0.isNote }.count }
 
     private let gh = GitHubService.shared
     private let iso = ISO8601DateFormatter()
@@ -34,7 +36,7 @@ class SyncService: ObservableObject {
             let jsonFiles: [GitHubFile]
             do {
                 let pendingFiles = try await gh.listDirectory("data/pending")
-                jsonFiles = pendingFiles.filter { $0.name != ".gitkeep" }
+                jsonFiles = pendingFiles.filter { $0.name.hasSuffix(".json") && $0.name != ".json" }
                 print("[Hikae] pending files found: \(jsonFiles.map(\.name))")
             } catch {
                 print("[Hikae] data/pending listing failed (ok if dir absent): \(error)")
@@ -166,18 +168,6 @@ class SyncService: ObservableObject {
     }
 
     func file(_ bookmark: Bookmark) async {
-        await updateStatus(bookmark, status: "filed", timestampKey: "filed_at")
-    }
-
-    func archive(_ bookmark: Bookmark) async {
-        await updateStatus(bookmark, status: "archived", timestampKey: "archived_at")
-    }
-
-    func delete(_ bookmark: Bookmark) async {
-        await updateStatus(bookmark, status: "deleted", timestampKey: "deleted_at")
-    }
-
-    private func updateStatus(_ bookmark: Bookmark, status: String, timestampKey: String) async {
         do {
             let fileContent = try await gh.getFile("data/bookmarks.json")
             guard
@@ -188,8 +178,8 @@ class SyncService: ObservableObject {
 
             let now = iso.string(from: Date())
             if let idx = bookmarks.firstIndex(where: { ($0["id"] as? String) == bookmark.id }) {
-                bookmarks[idx]["status"] = status
-                bookmarks[idx][timestampKey] = now
+                bookmarks[idx]["status"] = "filed"
+                bookmarks[idx]["filed_at"] = now
                 bookmarks[idx]["last_modified_at"] = now
                 bookmarks[idx]["last_modified_by"] = "mac"
             }
@@ -210,7 +200,7 @@ class SyncService: ObservableObject {
                 "data/bookmarks.json",
                 content: updatedContent,
                 sha: fileContent.sha,
-                message: "mac: \(status) bookmark \(bookmark.id)"
+                message: "mac: file bookmark \(bookmark.id)"
             )
 
             inboxItems.removeAll { $0.id == bookmark.id }
@@ -224,9 +214,7 @@ class SyncService: ObservableObject {
     }
 
     private func parseFilenameDate(_ filename: String) -> String? {
-        let stem = filename
-            .replacingOccurrences(of: ".json", with: "")
-            .replacingOccurrences(of: "-", with: "")
+        let stem = filename.replacingOccurrences(of: ".json", with: "")
         let formatter = DateFormatter()
         formatter.dateFormat = "yyyyMMddHHmmss"
         formatter.timeZone = TimeZone(identifier: "UTC")

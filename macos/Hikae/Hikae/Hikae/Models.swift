@@ -2,6 +2,7 @@ import Foundation
 
 struct Bookmark: Identifiable, Codable {
     let id: String
+    let type: String?
     let url: String
     let title: String
     let note: String?
@@ -13,12 +14,14 @@ struct Bookmark: Identifiable, Codable {
     let deletedAt: String?
 
     enum CodingKeys: String, CodingKey {
-        case id, url, title, note, why, status
+        case id, type, url, title, note, why, status
         case capturedAt = "captured_at"
         case capturedBy = "captured_by"
         case sourceID = "source_id"
         case deletedAt = "deleted_at"
     }
+
+    var isNote: Bool { type == "note" }
 
     var host: String {
         URL(string: url)?.host ?? url
