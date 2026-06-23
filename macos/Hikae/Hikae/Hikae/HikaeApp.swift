@@ -9,25 +9,21 @@ struct HikaeApp: App {
             MenuBarView()
                 .environmentObject(sync)
         } label: {
-            HStack(spacing: 5) {
-                if sync.bookmarkInboxCount > 0 || sync.inboxCount == 0 {
-                    Image(systemName: "bookmark")
-                    if sync.bookmarkInboxCount > 0 {
-                        Text("\(sync.bookmarkInboxCount)")
-                            .font(.caption.monospacedDigit())
-                    }
-                }
-                if sync.noteInboxCount > 0 {
-                    Image(systemName: "pencil")
-                    Text("\(sync.noteInboxCount)")
-                        .font(.caption.monospacedDigit())
-                }
-            }
+            MenuBarLabel(sync: sync)
         }
         .menuBarExtraStyle(.window)
 
         Settings {
             SettingsView()
         }
+    }
+}
+
+struct MenuBarLabel: View {
+    @ObservedObject var sync: SyncService
+
+    var body: some View {
+        Text("⊕\(sync.bookmarkInboxCount) ✎\(sync.noteInboxCount)")
+            .font(.caption.monospacedDigit())
     }
 }

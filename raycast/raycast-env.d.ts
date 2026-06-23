@@ -22,6 +22,8 @@ declare namespace Preferences {
   export type Search = ExtensionPreferences & {}
   /** Preferences accessible in the `capture` command */
   export type Capture = ExtensionPreferences & {}
+  /** Preferences accessible in the `note` command */
+  export type Note = ExtensionPreferences & {}
 }
 
 declare namespace Arguments {
@@ -29,5 +31,7 @@ declare namespace Arguments {
   export type Search = {}
   /** Arguments passed to the `capture` command */
   export type Capture = {}
+  /** Arguments passed to the `note` command */
+  export type Note = {}
 }
 

@@ -33,6 +33,7 @@ struct Bookmark: Identifiable, Codable {
 struct PendingCapture {
     let url: String
     let title: String
+    let itemType: String
     let note: String?
     let why: String?
     let capturedBy: String
@@ -46,6 +47,7 @@ struct PendingCapture {
             return PendingCapture(
                 url: url,
                 title: (json["title"] as? String) ?? url,
+                itemType: (json["type"] as? String) ?? "bookmark",
                 note: note,
                 why: why,
                 capturedBy: (json["captured_by"] as? String) ?? "ios"
@@ -65,6 +67,7 @@ struct PendingCapture {
         return PendingCapture(
             url: url,
             title: dict["title"] ?? url,
+            itemType: dict["type"] ?? "bookmark",
             note: dict["note"].flatMap { $0.isEmpty ? nil : $0 },
             why: dict["why"].flatMap { $0.isEmpty ? nil : $0 },
             capturedBy: dict["captured_by"] ?? "ios"

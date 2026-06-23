@@ -1,5 +1,6 @@
 import Foundation
 import Combine
+import os
 
 @MainActor
 class SyncService: ObservableObject {
@@ -7,13 +8,14 @@ class SyncService: ObservableObject {
     @Published var isSyncing = false
     @Published var lastSynced: Date?
     @Published var error: String?
+    @Published var bookmarkInboxCount: Int = 0
+    @Published var noteInboxCount: Int = 0
 
     var inboxCount: Int { inboxItems.count }
-    var bookmarkInboxCount: Int { inboxItems.filter { !$0.isNote }.count }
-    var noteInboxCount: Int { inboxItems.filter { $0.isNote }.count }
 
     private let gh = GitHubService.shared
     private let iso = ISO8601DateFormatter()
+    private let log = Logger(subsystem: "dev.hikae", category: "sync")
 
     init() {
         Task { await sync() }
@@ -37,9 +39,9 @@ class SyncService: ObservableObject {
             do {
                 let pendingFiles = try await gh.listDirectory("data/pending")
                 jsonFiles = pendingFiles.filter { $0.name.hasSuffix(".json") && $0.name != ".json" }
-                print("[Hikae] pending files found: \(jsonFiles.map(\.name))")
+                log.error("[Hikae] pending files found: \(jsonFiles.map(\.name))")
             } catch {
-                print("[Hikae] data/pending listing failed (ok if dir absent): \(error)")
+                log.error("[Hikae] data/pending listing failed (ok if dir absent): \(error)")
                 jsonFiles = []
             }
             if !jsonFiles.isEmpty {
@@ -47,11 +49,16 @@ class SyncService: ObservableObject {
             }
             let fileContent = try await gh.getFile("data/bookmarks.json")
             let parsed = try parseInboxBookmarks(from: fileContent.content)
-            print("[Hikae] bookmarks.json fetched, inbox count: \(parsed.count)")
+            log.error("[Hikae] bookmarks.json fetched, inbox count: \(parsed.count)")
+            log.error("[Hikae] types: \(parsed.map { "\($0.id.prefix(8)):\($0.itemType ?? "nil")" })")
+            log.error("[Hikae] notes: \(parsed.filter { $0.isNote }.map(\.title))")
             inboxItems = parsed
+            bookmarkInboxCount = parsed.filter { !$0.isNote }.count
+            noteInboxCount = parsed.filter { $0.isNote }.count
+            log.error("[Hikae] bookmarkInboxCount=\(self.bookmarkInboxCount) noteInboxCount=\(self.noteInboxCount)")
             lastSynced = Date()
         } catch {
-            print("[Hikae] sync error: \(error)")
+            log.error("[Hikae] sync error: \(error)")
             self.error = error.localizedDescription
         }
     }
@@ -62,26 +69,31 @@ class SyncService: ObservableObject {
             let root = try JSONSerialization.jsonObject(with: data) as? [String: Any],
             let rawBookmarks = root["bookmarks"] as? [[String: Any]]
         else {
-            print("[Hikae] failed to parse bookmarks.json root structure")
+            log.error("[Hikae] failed to parse bookmarks.json root structure")
             return []
         }
 
-        print("[Hikae] total bookmarks in file: \(rawBookmarks.count)")
-        let decoder = JSONDecoder()
+        log.error("[Hikae] total bookmarks in file: \(rawBookmarks.count)")
         let results = rawBookmarks.compactMap { dict -> Bookmark? in
             let deletedAt = dict["deleted_at"]
             let notDeleted = deletedAt == nil || deletedAt is NSNull || (deletedAt as? String) == ""
-            guard let status = dict["status"] as? String else { return nil }
-            guard status == "inbox" && notDeleted else { return nil }
-            guard let itemData = try? JSONSerialization.data(withJSONObject: dict),
-                  let bookmark = try? decoder.decode(Bookmark.self, from: itemData)
-            else {
-                print("[Hikae] failed to decode bookmark: \(dict["id"] ?? "?")")
-                return nil
-            }
-            return bookmark
+            guard let status = dict["status"] as? String, status == "inbox", notDeleted else { return nil }
+            guard let id = dict["id"] as? String else { return nil }
+            return Bookmark(
+                id: id,
+                itemType: dict["type"] as? String,
+                url: (dict["url"] as? String) ?? "",
+                title: (dict["title"] as? String) ?? "",
+                note: dict["note"] as? String,
+                why: dict["why"] as? String,
+                status: status,
+                capturedAt: (dict["captured_at"] as? String) ?? "",
+                capturedBy: (dict["captured_by"] as? String) ?? "",
+                sourceID: dict["source_id"] as? String,
+                deletedAt: dict["deleted_at"] as? String
+            )
         }
-        print("[Hikae] inbox bookmarks decoded: \(results.count)")
+        log.error("[Hikae] inbox bookmarks decoded: \(results.count)")
         return results
     }
 
@@ -104,6 +116,7 @@ class SyncService: ObservableObject {
 
             let bookmark: [String: Any] = [
                 "id": UUID().uuidString.lowercased(),
+                "type": capture.itemType,
                 "url": capture.url,
                 "title": capture.title,
                 "folder_id": NSNull(),
@@ -204,6 +217,8 @@ class SyncService: ObservableObject {
             )
 
             inboxItems.removeAll { $0.id == bookmark.id }
+            bookmarkInboxCount = inboxItems.filter { !$0.isNote }.count
+            noteInboxCount = inboxItems.filter { $0.isNote }.count
         } catch {
             self.error = error.localizedDescription
         }

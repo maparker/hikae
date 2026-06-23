@@ -67,19 +67,24 @@ class SyncService: ObservableObject {
         }
 
         print("[Hikae] total bookmarks in file: \(rawBookmarks.count)")
-        let decoder = JSONDecoder()
         let results = rawBookmarks.compactMap { dict -> Bookmark? in
             let deletedAt = dict["deleted_at"]
             let notDeleted = deletedAt == nil || deletedAt is NSNull || (deletedAt as? String) == ""
-            guard let status = dict["status"] as? String else { return nil }
-            guard status == "inbox" && notDeleted else { return nil }
-            guard let itemData = try? JSONSerialization.data(withJSONObject: dict),
-                  let bookmark = try? decoder.decode(Bookmark.self, from: itemData)
-            else {
-                print("[Hikae] failed to decode bookmark: \(dict["id"] ?? "?")")
-                return nil
-            }
-            return bookmark
+            guard let status = dict["status"] as? String, status == "inbox", notDeleted else { return nil }
+            guard let id = dict["id"] as? String else { return nil }
+            return Bookmark(
+                id: id,
+                itemType: dict["type"] as? String,
+                url: (dict["url"] as? String) ?? "",
+                title: (dict["title"] as? String) ?? "",
+                note: dict["note"] as? String,
+                why: dict["why"] as? String,
+                status: status,
+                capturedAt: (dict["captured_at"] as? String) ?? "",
+                capturedBy: (dict["captured_by"] as? String) ?? "",
+                sourceID: dict["source_id"] as? String,
+                deletedAt: dict["deleted_at"] as? String
+            )
         }
         print("[Hikae] inbox bookmarks decoded: \(results.count)")
         return results
