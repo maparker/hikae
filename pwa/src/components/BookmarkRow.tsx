@@ -70,7 +70,18 @@ export function BookmarkRow({ bookmark, isSelected, onSelect }: BookmarkRowProps
             </span>
             {bookmark.type === 'note'
               ? <PenLine className="h-[13px] w-[13px] flex-shrink-0 text-[#C9BFA9]" />
-              : <ExternalLink className="h-[13px] w-[13px] flex-shrink-0 text-[#C9BFA9]" />
+              : (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    window.open(bookmark.url, '_blank', 'noopener,noreferrer')
+                  }}
+                  className="flex-shrink-0 rounded p-0.5 text-[#C9BFA9] transition-colors hover:text-accent-ink"
+                  title="Open link"
+                >
+                  <ExternalLink className="h-[13px] w-[13px]" />
+                </button>
+              )
             }
           </div>
 
