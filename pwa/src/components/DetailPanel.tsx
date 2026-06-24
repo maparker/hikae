@@ -75,15 +75,13 @@ export function DetailPanel({ bookmark, onEdit }: DetailPanelProps) {
             Note
           </span>
         ) : (
-          <a
-            href={bookmark.url}
-            target="_blank"
-            rel="noopener noreferrer"
+          <button
+            onClick={() => window.open(bookmark.url, '_blank', 'noopener,noreferrer')}
             className="flex items-center gap-1 text-[12px] font-medium text-accent-ink hover:underline"
           >
             <ExternalLink className="h-[13px] w-[13px]" />
             Open
-          </a>
+          </button>
         )}
       </div>
 

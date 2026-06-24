@@ -144,14 +144,12 @@ export function EditBookmarkModal({ bookmark, onClose }: EditBookmarkModalProps)
 
         <div>
           <Label>URL</Label>
-          <a
-            href={bookmark.url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="mt-1 block truncate text-sm text-blue-600 hover:underline"
+          <button
+            onClick={() => window.open(bookmark.url, '_blank', 'noopener,noreferrer')}
+            className="mt-1 block truncate text-left text-sm text-blue-600 hover:underline"
           >
             {bookmark.url}
-          </a>
+          </button>
         </div>
 
         <div>

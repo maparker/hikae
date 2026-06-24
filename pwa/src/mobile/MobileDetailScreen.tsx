@@ -83,15 +83,13 @@ export function MobileDetailScreen({ bookmarkId, onBack }: MobileDetailScreenPro
             Inbox
           </button>
           {bookmark && (
-            <a
-              href={bookmark.url}
-              target="_blank"
-              rel="noopener noreferrer"
+            <button
+              onClick={() => window.open(bookmark.url, '_blank', 'noopener,noreferrer')}
               className="flex items-center gap-1 rounded-full border border-hairline bg-surface px-3 py-1.5 text-[13px] font-medium text-accent-ink dark:border-dk-border dark:bg-dk-card dark:text-dk-accent"
             >
               <ExternalLink className="h-4 w-4" />
               Open
-            </a>
+            </button>
           )}
         </div>
 
