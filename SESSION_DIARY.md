@@ -300,3 +300,23 @@
 **Why:** In PWA standalone mode, `target="_blank"` anchors can be silently swallowed by Chrome's popup blocker. `window.open()` called synchronously from a user gesture (onclick) is treated as a trusted navigation and bypasses that block. Applies to both desktop Chrome PWA and iOS Safari PWA installs.
 
 ---
+
+### 2026-07-06 20:10 - Add dark theme support to desktop PWA
+
+**Investigated:** ThemeContext existed with light/dark/auto state + localStorage, dark color tokens were defined in tailwind.config.js (dk.*), and mobile screens already had dark: Tailwind variants — but the `dark` class was never applied to `document.documentElement`, and desktop components had no dark: variants or theme toggle UI.
+
+**Changed:**
+- `pwa/src/context/ThemeContext.tsx` — added `document.documentElement.classList.toggle('dark', isDark)` inside the existing `useEffect` so the class tracks state
+- `pwa/tailwind.config.js` — added missing dark tokens: `dk.sidebar`, `dk.row-hover`, `dk.surface-sunken`, `dk.accent-wash`, `dk.accent-wash-border`
+- `pwa/src/components/Sidebar.tsx` — added dark: variants throughout, replaced inline hex color styles with Tailwind class names; added Sun/Moon/Monitor theme cycle button to footer
+- `pwa/src/pages/Home.tsx` — added dark: variants to header, capture bar, and status elements
+- `pwa/src/components/BookmarkRow.tsx` — added dark: variants to row, title, metadata, note/why bars, tags, action buttons
+- `pwa/src/components/DetailPanel.tsx` — added dark: variants, converted STATUS_PILL from inline hex styles to Tailwind class strings so dark: variants can apply
+- `pwa/src/components/DesktopCaptureModal.tsx` — added dark: variants, used isDark from useTheme for the mode-tab active style that couldn't be done with Tailwind alone; darkened the scrim background
+- `pwa/src/pages/Login.tsx` — added basic dark: variants
+
+**Decided:** Theme toggle lives in the desktop sidebar footer as a cycle button (light → dark → auto → light) showing Sun/Moon/Monitor icons. Mobile already had a segmented control in Settings. No new pages or components created.
+
+**Why:** The entire infrastructure was already in place — this was purely wiring + styling work. Keeping the toggle as a sidebar icon button matches the existing Settings/LogOut pattern without adding any visual weight. Using `dark:` Tailwind variants throughout keeps a single source of truth and avoids runtime class swapping.
+
+---

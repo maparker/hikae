@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { Check, Plus, X } from 'lucide-react'
 import { useData } from '../context/DataContext'
+import { useTheme } from '../context/ThemeContext'
 import type { Bookmark, BookmarksData, Source } from '../types'
 import hikaeLogo from '../assets/hikae-icon.png'
 
@@ -33,6 +34,7 @@ function detectSource(url: string, sources: Source[]): Source | null {
 
 export function DesktopCaptureModal({ initialUrl = '', initialMode = 'link', onClose }: DesktopCaptureModalProps) {
   const { data, save } = useData()
+  const { isDark } = useTheme()
   const [mode, setMode] = useState<'link' | 'note'>(initialMode)
   const [url, setUrl] = useState(initialUrl)
   const [noteTitle, setNoteTitle] = useState('')
@@ -136,15 +138,15 @@ export function DesktopCaptureModal({ initialUrl = '', initialMode = 'link', onC
   return (
     <div
       className="fixed inset-0 z-50 flex items-start justify-center pt-[15vh]"
-      style={{ background: 'rgba(40,30,15,.32)' }}
+      style={{ background: isDark ? 'rgba(10,8,5,.55)' : 'rgba(40,30,15,.32)' }}
       onClick={(e) => { if (e.target === e.currentTarget) onClose() }}
     >
       <div
-        className="w-full max-w-[520px] rounded-[16px] bg-surface-sheet shadow-[0_24px_64px_rgba(40,28,10,.22),0_0_0_1px_rgba(60,40,15,.06)]"
+        className="w-full max-w-[520px] rounded-[16px] bg-surface-sheet shadow-[0_24px_64px_rgba(40,28,10,.22),0_0_0_1px_rgba(60,40,15,.06)] dark:bg-dk-card dark:shadow-[0_24px_64px_rgba(0,0,0,.5),0_0_0_1px_rgba(255,255,255,.04)]"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-center gap-3 border-b border-hairline-faint px-5 py-4">
+        <div className="flex items-center gap-3 border-b border-hairline-faint px-5 py-4 dark:border-dk-divider">
           <img
             src={hikaeLogo}
             alt=""
@@ -152,18 +154,20 @@ export function DesktopCaptureModal({ initialUrl = '', initialMode = 'link', onC
             style={{ borderRadius: '6.2px', boxShadow: '0 1px 2px rgba(80,55,20,.18)' }}
           />
           <div>
-            <p className="font-serif text-[15px] font-semibold text-ink">Keep for later</p>
-            <p className="font-mono text-[10.5px] text-ink-mono-faint">⌘↵ to save · Esc to cancel</p>
+            <p className="font-serif text-[15px] font-semibold text-ink dark:text-dk-ink">Keep for later</p>
+            <p className="font-mono text-[10.5px] text-ink-mono-faint dark:text-dk-ink-faint">⌘↵ to save · Esc to cancel</p>
           </div>
           {/* Mode tabs */}
-          <div className="ml-auto flex items-center gap-1 rounded-[8px] bg-surface-sunken p-0.5">
+          <div className="ml-auto flex items-center gap-1 rounded-[8px] bg-surface-sunken p-0.5 dark:bg-dk-chip-bg">
             {(['link', 'note'] as const).map((m) => (
               <button
                 key={m}
                 onClick={() => setMode(m)}
                 className="rounded-[6px] px-3 py-1 text-[12px] font-medium transition-colors"
                 style={mode === m
-                  ? { background: '#fff', color: '#3A3226', boxShadow: '0 1px 2px rgba(60,40,15,.10)' }
+                  ? isDark
+                    ? { background: '#38322A', color: '#F0E9DB' }
+                    : { background: '#fff', color: '#3A3226', boxShadow: '0 1px 2px rgba(60,40,15,.10)' }
                   : { color: '#8A8173' }
                 }
               >
@@ -171,7 +175,7 @@ export function DesktopCaptureModal({ initialUrl = '', initialMode = 'link', onC
               </button>
             ))}
           </div>
-          <button onClick={onClose} className="rounded-[6px] p-1.5 text-ink-3 hover:bg-hairline-faint">
+          <button onClick={onClose} className="rounded-[6px] p-1.5 text-ink-3 hover:bg-hairline-faint dark:text-dk-ink-3 dark:hover:bg-dk-chip-bg">
             <X className="h-4 w-4" />
           </button>
         </div>
@@ -180,15 +184,15 @@ export function DesktopCaptureModal({ initialUrl = '', initialMode = 'link', onC
           {mode === 'link' ? (
             <>
               {/* URL */}
-              <div className="rounded-[10px] border border-hairline bg-surface px-3.5 py-2.5">
-                <p className="mb-1 text-[9.5px] font-semibold uppercase tracking-[.12em] text-ink-3">Link</p>
+              <div className="rounded-[10px] border border-hairline bg-surface px-3.5 py-2.5 dark:border-dk-border dark:bg-[#221E19]">
+                <p className="mb-1 text-[9.5px] font-semibold uppercase tracking-[.12em] text-ink-3 dark:text-dk-ink-3">Link</p>
                 <input
                   ref={urlRef}
                   type="url"
                   value={url}
                   onChange={(e) => setUrl(e.target.value)}
                   placeholder="https://"
-                  className="w-full bg-transparent font-mono text-[13px] text-ink outline-none placeholder:text-ink-3"
+                  className="w-full bg-transparent font-mono text-[13px] text-ink outline-none placeholder:text-ink-3 dark:text-dk-ink dark:placeholder:text-dk-ink-3"
                 />
               </div>
 
@@ -197,13 +201,13 @@ export function DesktopCaptureModal({ initialUrl = '', initialMode = 'link', onC
                 <div className="mt-2 flex items-center gap-1.5 px-0.5">
                   {detectedSource ? (
                     <>
-                      <Check className="h-3 w-3 text-sync-green" />
-                      <span className="text-[11.5px] text-ink-2">
+                      <Check className="h-3 w-3 text-sync-green dark:text-dk-green" />
+                      <span className="text-[11.5px] text-ink-2 dark:text-dk-ink-2">
                         source auto-detected — <strong>{detectedSource.name}</strong>
                       </span>
                     </>
                   ) : (
-                    <span className="text-[11.5px] text-ink-3">
+                    <span className="text-[11.5px] text-ink-3 dark:text-dk-ink-3">
                       source: <span className="font-mono">{urlHost}</span> (no match)
                     </span>
                   )}
@@ -211,11 +215,11 @@ export function DesktopCaptureModal({ initialUrl = '', initialMode = 'link', onC
               )}
 
               {/* Why */}
-              <div className="mt-3 rounded-[10px] border border-hairline bg-surface">
+              <div className="mt-3 rounded-[10px] border border-hairline bg-surface dark:border-dk-border dark:bg-[#221E19]">
                 <div className="flex gap-2.5 px-3.5 py-2.5">
-                  <div className="mt-1 w-0.5 flex-shrink-0 self-stretch rounded-full bg-accent" />
+                  <div className="mt-1 w-0.5 flex-shrink-0 self-stretch rounded-full bg-accent dark:bg-dk-accent" />
                   <div className="flex-1">
-                    <p className="mb-1 font-serif text-[9.5px] uppercase tracking-[.16em]" style={{ color: '#C68B7C' }}>
+                    <p className="mb-1 font-serif text-[9.5px] uppercase tracking-[.16em] text-[#C68B7C] dark:text-[#D4907C]">
                       控 · why keep it?
                     </p>
                     <textarea
@@ -223,7 +227,7 @@ export function DesktopCaptureModal({ initialUrl = '', initialMode = 'link', onC
                       onChange={(e) => setWhy(e.target.value)}
                       placeholder="What made you save this?"
                       rows={2}
-                      className="w-full resize-none bg-transparent text-[13px] leading-relaxed text-ink outline-none placeholder:text-ink-3"
+                      className="w-full resize-none bg-transparent text-[13px] leading-relaxed text-ink outline-none placeholder:text-ink-3 dark:text-dk-ink dark:placeholder:text-dk-ink-3"
                     />
                   </div>
                 </div>
@@ -232,36 +236,36 @@ export function DesktopCaptureModal({ initialUrl = '', initialMode = 'link', onC
           ) : (
             <>
               {/* Note title */}
-              <div className="rounded-[10px] border border-hairline bg-surface px-3.5 py-2.5">
-                <p className="mb-1 text-[9.5px] font-semibold uppercase tracking-[.12em] text-ink-3">Title</p>
+              <div className="rounded-[10px] border border-hairline bg-surface px-3.5 py-2.5 dark:border-dk-border dark:bg-[#221E19]">
+                <p className="mb-1 text-[9.5px] font-semibold uppercase tracking-[.12em] text-ink-3 dark:text-dk-ink-3">Title</p>
                 <input
                   ref={noteTitleRef}
                   type="text"
                   value={noteTitle}
                   onChange={(e) => setNoteTitle(e.target.value)}
                   placeholder="Short headline…"
-                  className="w-full bg-transparent text-[13px] text-ink outline-none placeholder:text-ink-3"
+                  className="w-full bg-transparent text-[13px] text-ink outline-none placeholder:text-ink-3 dark:text-dk-ink dark:placeholder:text-dk-ink-3"
                 />
               </div>
 
               {/* Note body */}
-              <div className="mt-3 rounded-[10px] border border-hairline bg-surface px-3.5 py-2.5">
-                <p className="mb-1 text-[9.5px] font-semibold uppercase tracking-[.12em] text-ink-3">Note</p>
+              <div className="mt-3 rounded-[10px] border border-hairline bg-surface px-3.5 py-2.5 dark:border-dk-border dark:bg-[#221E19]">
+                <p className="mb-1 text-[9.5px] font-semibold uppercase tracking-[.12em] text-ink-3 dark:text-dk-ink-3">Note</p>
                 <textarea
                   value={noteBody}
                   onChange={(e) => setNoteBody(e.target.value)}
                   placeholder="Write something…"
                   rows={4}
-                  className="w-full resize-none bg-transparent text-[13px] leading-relaxed text-ink outline-none placeholder:text-ink-3"
+                  className="w-full resize-none bg-transparent text-[13px] leading-relaxed text-ink outline-none placeholder:text-ink-3 dark:text-dk-ink dark:placeholder:text-dk-ink-3"
                 />
               </div>
 
               {/* Why */}
-              <div className="mt-3 rounded-[10px] border border-hairline bg-surface">
+              <div className="mt-3 rounded-[10px] border border-hairline bg-surface dark:border-dk-border dark:bg-[#221E19]">
                 <div className="flex gap-2.5 px-3.5 py-2.5">
-                  <div className="mt-1 w-0.5 flex-shrink-0 self-stretch rounded-full bg-accent" />
+                  <div className="mt-1 w-0.5 flex-shrink-0 self-stretch rounded-full bg-accent dark:bg-dk-accent" />
                   <div className="flex-1">
-                    <p className="mb-1 font-serif text-[9.5px] uppercase tracking-[.16em]" style={{ color: '#C68B7C' }}>
+                    <p className="mb-1 font-serif text-[9.5px] uppercase tracking-[.16em] text-[#C68B7C] dark:text-[#D4907C]">
                       控 · context (optional)
                     </p>
                     <textarea
@@ -269,7 +273,7 @@ export function DesktopCaptureModal({ initialUrl = '', initialMode = 'link', onC
                       onChange={(e) => setWhy(e.target.value)}
                       placeholder="Why write this down?"
                       rows={2}
-                      className="w-full resize-none bg-transparent text-[13px] leading-relaxed text-ink outline-none placeholder:text-ink-3"
+                      className="w-full resize-none bg-transparent text-[13px] leading-relaxed text-ink outline-none placeholder:text-ink-3 dark:text-dk-ink dark:placeholder:text-dk-ink-3"
                     />
                   </div>
                 </div>
@@ -280,7 +284,7 @@ export function DesktopCaptureModal({ initialUrl = '', initialMode = 'link', onC
           {/* Tags */}
           {data && data.tags.length > 0 && (
             <div className="mt-3">
-              <p className="mb-1.5 text-[9.5px] font-semibold uppercase tracking-[.12em] text-ink-3">Tags</p>
+              <p className="mb-1.5 text-[9.5px] font-semibold uppercase tracking-[.12em] text-ink-3 dark:text-dk-ink-3">Tags</p>
               <div className="flex flex-wrap gap-1.5">
                 {data.tags.map((tag) => {
                   const active = selectedTagIds.has(tag.id)
@@ -291,7 +295,9 @@ export function DesktopCaptureModal({ initialUrl = '', initialMode = 'link', onC
                       className="rounded-[6px] px-2.5 py-1 font-mono text-[11px] transition-colors"
                       style={
                         active
-                          ? { background: '#C13D2B', color: '#fff' }
+                          ? { background: isDark ? '#E2705A' : '#C13D2B', color: '#fff' }
+                          : isDark
+                          ? { background: '#322E26', color: '#8A8173', border: '1px solid #3C362D' }
                           : { background: '#F1ECE0', color: '#8A8173', border: '1px solid #E9E1D1' }
                       }
                     >
@@ -299,7 +305,7 @@ export function DesktopCaptureModal({ initialUrl = '', initialMode = 'link', onC
                     </button>
                   )
                 })}
-                <button className="flex items-center gap-1 rounded-[6px] border border-dashed border-hairline px-2.5 py-1 font-mono text-[11px] text-ink-3">
+                <button className="flex items-center gap-1 rounded-[6px] border border-dashed border-hairline px-2.5 py-1 font-mono text-[11px] text-ink-3 dark:border-dk-border dark:text-dk-ink-3">
                   <Plus className="h-3 w-3" />
                   tag
                 </button>
@@ -313,14 +319,14 @@ export function DesktopCaptureModal({ initialUrl = '', initialMode = 'link', onC
           <div className="mt-4 flex gap-2">
             <button
               onClick={onClose}
-              className="flex h-9 flex-1 items-center justify-center rounded-[8px] border border-hairline-warm bg-surface-sunken text-[13px] font-medium text-ink-2 hover:bg-sidebar transition-colors"
+              className="flex h-9 flex-1 items-center justify-center rounded-[8px] border border-hairline-warm bg-surface-sunken text-[13px] font-medium text-ink-2 transition-colors hover:bg-sidebar dark:border-dk-border dark:bg-dk-surface-sunken dark:text-dk-ink-2 dark:hover:bg-dk-row-hover"
             >
               Cancel
             </button>
             <button
               onClick={handleKeep}
               disabled={mode === 'link' ? !url.trim() || saving : (!noteTitle.trim() && !noteBody.trim()) || saving}
-              className="flex h-9 flex-[2] items-center justify-center rounded-[8px] bg-accent text-[13px] font-semibold text-white disabled:opacity-50 transition-colors hover:brightness-105"
+              className="flex h-9 flex-[2] items-center justify-center rounded-[8px] bg-accent text-[13px] font-semibold text-white transition-colors hover:brightness-105 disabled:opacity-50 dark:bg-dk-accent"
             >
               {saving ? 'Saving…' : mode === 'note' ? 'Keep Note' : 'Keep in Inbox'}
             </button>

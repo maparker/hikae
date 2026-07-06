@@ -11,11 +11,11 @@ export function Login() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gray-50">
-      <div className="w-full max-w-sm rounded-xl border border-gray-200 bg-white p-8 shadow-sm">
+    <div className="flex min-h-screen items-center justify-center bg-gray-50 dark:bg-dk-bg">
+      <div className="w-full max-w-sm rounded-xl border border-gray-200 bg-white p-8 shadow-sm dark:border-dk-border dark:bg-dk-card">
         <div className="mb-8 text-center">
-          <h1 className="text-3xl font-bold text-gray-900">Hikae</h1>
-          <p className="mt-2 text-sm text-gray-500">Your personal read-later inbox</p>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-dk-ink">Hikae</h1>
+          <p className="mt-2 text-sm text-gray-500 dark:text-dk-ink-3">Your personal read-later inbox</p>
         </div>
         <Button className="w-full gap-2" onClick={handleSignIn}>
           <Github className="h-4 w-4" />

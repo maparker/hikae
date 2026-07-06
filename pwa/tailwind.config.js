@@ -44,6 +44,9 @@ export default {
         dk: {
           bg: '#1E1B17',
           card: '#28241E',
+          sidebar: '#231F1B',
+          'row-hover': '#2D2922',
+          'surface-sunken': '#191613',
           border: '#38322A',
           divider: '#332E27',
           ink: '#F0E9DB',
@@ -51,6 +54,8 @@ export default {
           'ink-3': '#8A8173',
           'ink-faint': '#7E7460',
           accent: '#E2705A',
+          'accent-wash': '#2B1D1A',
+          'accent-wash-border': '#3C2520',
           'chip-bg': '#322E26',
           'chip-border': '#3C362D',
           'pill-idle': '#2E2A23',
